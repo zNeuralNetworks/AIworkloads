@@ -9,8 +9,38 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
   },
+  build: {
+    target: 'ES2022',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['framer-motion', 'lucide-react'],
+          'vendor-charts': ['recharts'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-sentry': ['@sentry/react'],
+          // Route-based chunks
+          'page-operations': ['./pages/OperationsPage.tsx'],
+          'page-glossary': ['./pages/GlossaryPage.tsx'],
+          'page-deepdive': ['./pages/DeepDivePage.tsx'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
   plugins: [
-    react(),
+    react({
+      // Enable fast refresh for dev mode
+      fastRefresh: true,
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
@@ -19,6 +49,17 @@ export default defineConfig({
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com/,
             handler: 'StaleWhileRevalidate',
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+            },
           },
         ],
       },
