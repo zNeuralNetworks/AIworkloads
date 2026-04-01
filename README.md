@@ -1,8 +1,10 @@
-# AI Networking Education Center
+# Scientific Workflow Architecture
 
-An interactive educational platform teaching modern AI networking — the hardware, protocols, and fabric architectures that power distributed AI training at scale. Covers the industry transition from InfiniBand to Ethernet-based fabrics (RoCEv2, Ultra Ethernet), with deep-dives on Arista hardware platforms, congestion control, and GPU cluster topologies.
+An architecture reference layer for understanding how workloads create infrastructure requirements.
 
 **Live:** [learn.polymathsystem.com](https://learn.polymathsystem.com)
+
+> **Product boundary:** This app frames workload/system behavior and architecture implications. Detailed node/NIC/leaf/spine/optics sizing belongs in the AI Cluster Planner inside Optics Master.
 
 ---
 
@@ -10,20 +12,22 @@ An interactive educational platform teaching modern AI networking — the hardwa
 
 | Module | Title | Route / Anchor | Key Topics |
 |--------|-------|---------------|------------|
-| 01 | **Architecture** | `/#etherlink` | AI Ethernet fabric basics, leaf-spine topology, North-South vs East-West traffic |
-| 02 | **Core Technologies** | `/#concepts` | RDMA, RoCEv2, NVMe-oF, kernel bypass, GPUDirect, lossless fabric requirements |
-| 03 | **Protocols & Data Flow** | `/#protocols` | RoCEv2 vs Ultra Ethernet (UET), PFC/ECN, DCQCN congestion control |
+| 01 | **Architecture Patterns** | `/#etherlink` | AI Ethernet fabric basics, leaf-spine topology, North-South vs East-West traffic |
+| 02 | **Data Movement** | `/#concepts` | RDMA, RoCEv2, NVMe-oF, kernel bypass, GPUDirect, lossless fabric requirements |
+| 03 | **Transport & Congestion** | `/#protocols` | RoCEv2 vs Ultra Ethernet (UET), PFC/ECN, DCQCN congestion control |
 | 04 | **Protocol Deep Dive** | `/deep-dive` | Advanced RoCEv2/UET technical comparison — separate page |
-| 05 | **Load Balancing** | `/#load-balancing` | ECMP, DLB, CLB, packet spraying, path symmetry |
-| 06 | **Comparison** | `/#uec` | RoCEv2 vs InfiniBand vs UET — technology tradeoffs |
-| 07 | **Congestion & Performance** | `/#performance` | ECN, PFC, head-of-line blocking, job completion time, tail latency |
+| 05 | **Communication Patterns** | `/#load-balancing` | ECMP, DLB, CLB, packet spraying, path symmetry |
+| 06 | **Transport Tradeoffs** | `/#uec` | RoCEv2 vs InfiniBand vs UET — technology tradeoffs |
+| 07 | **Performance Implications** | `/#performance` | ECN, PFC, head-of-line blocking, job completion time, tail latency |
 | 08 | **Operations Playbooks** | `/operations` | Vendor-neutral runbooks, migration matrix, module checks — separate page |
-| 09 | **Hardware Platforms** | `/#hardware` | Arista 7060X, 7800R, 7700R DES, 7280R3, 7280R3A — specs, variants, key features |
-| 10 | **Training vs Inference** | `/#training-vs-inference` | Traffic patterns, latency targets, scale-up vs scale-out design tradeoffs |
-| 11 | **AI vs HPC** | `/#hpc` | Synchronization barriers, traffic patterns, scale priorities comparison |
+| 09 | **Platform Considerations** | `/#hardware` | Arista 7060X, 7800R, 7700R DES, 7280R3, 7280R3A — specs, variants, key features |
+| 10 | **Workload Types** | `/#training-vs-inference` | Traffic patterns, latency targets, scale-up vs scale-out design tradeoffs |
+| 11 | **Scientific Workflow Context** | `/#hpc` | Synchronization barriers, traffic patterns, scale priorities comparison |
 | 12 | **Glossary** | `/glossary` | 158+ searchable networking terms — separate page |
 
 All content is editable at runtime via the built-in [Admin CMS](#admin-cms).
+
+> **Scope note:** quantitative sizing (nodes/NICs/leaf-spine/optics) belongs in AI Cluster Planner, not this reference app.
 
 ---
 
@@ -121,7 +125,7 @@ AIworkloads/
     │   ├── OperationsPlaybooksSection.tsx  # Day-2 runbooks + migration matrix
     │   ├── HardwareSection.tsx      # Arista platform selector + specs
     │   ├── TrainingVsInferenceSection.tsx  # Training vs inference design comparison
-    │   ├── HPCSection.tsx           # AI vs HPC checklist
+    │   ├── HPCSection.tsx           # Scientific workflow context and AI/HPC divergence
     │   ├── GlossarySection.tsx      # Searchable 3-column term grid
     │   ├── GlossaryTerm.tsx         # Inline hover-tooltip for any term
     │   ├── RoadmapSection.tsx       # Future improvements roadmap
@@ -203,14 +207,14 @@ App
             │   │   └── FadeIn > Suspense > SectionComponent
             │   │       Modules (in order):
             │   │       ArchitectureSection       id="etherlink"
-            │   │       ConceptsSection           id="concepts"
-            │   │       ProtocolsSection          id="protocols"
-            │   │       LoadBalancingSection      id="load-balancing"
-            │   │       ComparisonTable           id="uec"
-            │   │       PerformanceSection        id="performance"
+            │   │       ConceptsSection           id="concepts"   // Data Movement
+            │   │       ProtocolsSection          id="protocols"  // Transport & Congestion
+            │   │       LoadBalancingSection      id="load-balancing" // Communication Patterns
+            │   │       ComparisonTable           id="uec"       // Transport Tradeoffs
+            │   │       PerformanceSection        id="performance" // Performance Implications
             │   │       HardwareSection           id="hardware"
-            │   │       TrainingVsInferenceSection id="training-vs-inference"
-            │   │       HPCSection                id="hpc"
+            │   │       TrainingVsInferenceSection id="training-vs-inference" // Workload Types
+            │   │       HPCSection                id="hpc"       // Scientific Workflow Context
             │   ├── NextSectionCTA        (between sections)
             │   ├── Footer
             │   └── AdminDashboard        (modal, conditionally rendered)
@@ -244,16 +248,16 @@ All section components are **lazy-loaded** (`React.lazy`) and wrapped in `<Suspe
 |-----------|----------|----------------------|-----------------|
 | `HomeDashboard` | `intro` | `homeModules`, `appConfig` | Bento-grid module launcher |
 | `ArchitectureSection` | `etherlink` | `scalingConcepts` | SVG animated leaf-spine diagram |
-| `ConceptsSection` | `concepts` | `coreConcepts` | RDMA animation, RoCEv2 protocol stack visual |
-| `ProtocolsSection` | `protocols` | `protocolConcepts` | Tabbed comparison, `useState(activeTab)` |
+| `ConceptsSection` | `concepts` | `coreConcepts` | Data movement primitives (RDMA / RoCEv2 / NVMe-oF) |
+| `ProtocolsSection` | `protocols` | `protocolConcepts` | Transport and congestion decision tabs |
 | `ProtocolDeepDive` | — (own page) | — | Advanced content on `/deep-dive` |
-| `LoadBalancingSection` | `load-balancing` | — | ECMP/DLB/CLB comparison |
-| `ComparisonTable` | `uec` | `comparisonTable` | Feature matrix rows |
+| `LoadBalancingSection` | `load-balancing` | — | Communication pattern and path-distribution guidance |
+| `ComparisonTable` | `uec` | `comparisonTable` | Transport tradeoff matrix rows |
 | `PerformanceSection` | `performance` | `performanceData`, `failoverData` | Recharts BarChart + LineChart |
 | `OperationsPlaybooksSection` | — (own page) | — | Runbooks + migration matrix on `/operations` |
 | `HardwareSection` | `hardware` | `products` | Product selector, `DescriptionRenderer` auto-glossary |
-| `TrainingVsInferenceSection` | `training-vs-inference` | — | Side-by-side design comparison |
-| `HPCSection` | `hpc` | `hpcChecklist` | Checklist cards with validation phases |
+| `TrainingVsInferenceSection` | `training-vs-inference` | — | Workload type comparison (training vs inference) |
+| `HPCSection` | `hpc` | `hpcChecklist` | Scientific workflow context and divergence from AI training |
 | `GlossarySection` | — (own page) | `glossary` | Searchable 3-col grid on `/glossary` |
 
 ### Data Flow
@@ -325,13 +329,13 @@ The app ships with a password-protected content management system that edits eve
 |-----|---------|
 | Global Config | Hero title and subtitle (`AppConfig`) |
 | Home Layout | Bento-grid module cards (`HomeModule[]`) |
-| Architecture (Scaling) | Scaling concept cards (`ScalingConcept[]`) |
-| Core Technologies | RDMA, NVMe, RoCEv2 cards (`ConceptData[]`) |
-| Protocols | Protocol comparison cards (`ProtocolConcept[]`) |
-| Legacy vs Modern | Feature comparison table rows (`ComparisonRow[]`) |
-| Products & Hardware | Hardware platform cards + variants (`ProductData[]`) |
-| HPC Checklist | AI vs HPC checklist items (`HPCItem[]`) |
-| Performance Charts | Chart data — efficiency and failover (`ChartData[]`) |
+| Architecture Patterns | Scaling concept cards (`ScalingConcept[]`) |
+| Data Movement | RDMA, NVMe, RoCEv2 cards (`ConceptData[]`) |
+| Transport & Congestion | Protocol comparison cards (`ProtocolConcept[]`) |
+| Transport Tradeoffs | Feature comparison table rows (`ComparisonRow[]`) |
+| Platform Considerations | Hardware platform cards + variants (`ProductData[]`) |
+| Scientific Workflow Context | AI/HPC context checklist items (`HPCItem[]`) |
+| Performance Implications | Chart data — efficiency and failover (`ChartData[]`) |
 | Glossary Terms | All 158+ term definitions (`Record<string, string>`) |
 | Suggested Improvements | Roadmap items by category (`FutureCategory[]`) |
 

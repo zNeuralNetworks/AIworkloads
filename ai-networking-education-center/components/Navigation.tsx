@@ -152,7 +152,7 @@ const Navigation: React.FC<NavigationProps> = ({ onSearchClick }) => {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <div className="text-xl font-bold tracking-tighter text-white hover:opacity-80 transition-opacity">
-            Networking for AI Workloads
+            Scientific Workflow Architecture
           </div>
         </motion.a>
       )}

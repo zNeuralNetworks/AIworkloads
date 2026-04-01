@@ -16,8 +16,8 @@ const ArchitectureSection: React.FC = () => {
         
         {/* Section Header */}
         <div className="mb-20">
-          <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Module 01</div>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Fundamentals of AI Fabrics</h2>
+          <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Domain · Architecture Patterns</div>
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Architecture Patterns</h2>
           <p className="text-slate-400 max-w-2xl text-lg leading-relaxed">
             Legacy three-tier architectures were built for <GlossaryTerm term="North-South Traffic" />. 
             AI Training requires a flat, high-bandwidth <GlossaryTerm term="East-West Traffic" /> fabric to synchronize thousands of GPUs.
@@ -55,10 +55,10 @@ const ArchitectureSection: React.FC = () => {
         {/* Topology Selection Decision Tree */}
         <div className="mb-24">
           <div className="mb-10">
-            <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Decision Framework</div>
-            <h3 className="text-2xl font-bold text-white mb-3">Topology Selection Guide</h3>
+            <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Architecture Implications</div>
+            <h3 className="text-2xl font-bold text-white mb-3">Topology Pattern Guide</h3>
             <p className="text-slate-400 max-w-2xl text-sm">
-              Choose your AI fabric topology based on GPU count and growth trajectory. Each branch maps to proven Arista hardware.
+              Map workload behavior to topology patterns. Detailed sizing is intentionally out of scope in this reference layer.
             </p>
           </div>
           <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -215,7 +215,16 @@ const ArchitectureSection: React.FC = () => {
                     100% { top: 0%; opacity: 0; }
                 }
             `}</style>
-        </div>
+	        </div>
+
+          {/* Handoff CTA */}
+          <div className="mt-10 bg-[#0d1117] border border-blue-500/20 rounded-2xl p-6">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-blue-300 mb-2">Next Step</div>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              Use this architecture framing to move into Optics Master / AI Cluster Planner for
+              quantitative sizing outputs (nodes, NICs, leaf/spine counts, and optics).
+            </p>
+          </div>
 
       </div>
     </section>

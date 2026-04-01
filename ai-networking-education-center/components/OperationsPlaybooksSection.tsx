@@ -60,7 +60,7 @@ const OperationsPlaybooksSection: React.FC = () => {
       <div className="container mx-auto px-6">
         <div className="mb-12 flex flex-col md:flex-row justify-between items-start gap-6">
           <div>
-            <div className="text-amber-400 font-mono text-xs uppercase tracking-widest mb-4">Module 08 · Intermediate / Deep Dive</div>
+            <div className="text-amber-400 font-mono text-xs uppercase tracking-widest mb-4">Domain · Operational Runbooks</div>
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Operations Playbooks</h2>
             <p className="text-slate-400 max-w-3xl">
               Turn networking concepts into repeatable day-2 operations with vendor-neutral design principles,
@@ -249,6 +249,15 @@ const OperationsPlaybooksSection: React.FC = () => {
               </li>
             ))}
           </ul>
+        </div>
+
+        {/* Handoff CTA */}
+        <div className="mt-8 bg-[#0d1117] border border-emerald-500/20 rounded-2xl p-6">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-300 mb-2">Planner Handoff</div>
+          <p className="text-sm text-slate-300 leading-relaxed">
+            After validating operational implications and risk posture, proceed to Optics Master /
+            AI Cluster Planner for quantitative implementation outputs and sizing.
+          </p>
         </div>
       </div>
     </section>

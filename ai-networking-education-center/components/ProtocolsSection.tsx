@@ -23,11 +23,10 @@ const ProtocolsSection: React.FC = () => {
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Module 03</div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Network Protocols Explained</h2>
+          <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Domain · Transport & Congestion</div>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Transport & Congestion</h2>
           <p className="text-slate-400 max-w-2xl mx-auto">
-            Understanding the transport layer is critical for AI performance. 
-            Compare the current industry standard (<GlossaryTerm term="RoCE">RoCEv2</GlossaryTerm>) with the future of AI networking (UET).
+            Compare transport and flow-control behavior for RoCEv2 and emerging Ultra Ethernet Transport (UET) workflows.
           </p>
         </div>
 

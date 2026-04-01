@@ -53,37 +53,37 @@ interface DataContextType {
   glossary: Record<string, string>;
   updateGlossary: (newGlossary: Record<string, string>) => void;
 
-  // Architecture Module (Scaling)
+  // Architecture Patterns Domain
   scalingConcepts: ScalingConcept[];
   updateScalingConcepts: (data: ScalingConcept[]) => void;
 
-  // Concepts Module (RDMA/NVMe)
+  // Data Movement Domain (RDMA / RoCEv2 / NVMe-oF)
   coreConcepts: ConceptData[];
   updateCoreConcepts: (data: ConceptData[]) => void;
 
-  // Protocols Module
+  // Transport & Congestion Domain
   protocolConcepts: ProtocolConcept[];
   updateProtocolConcepts: (data: ProtocolConcept[]) => void;
 
-  // Comparison Module
+  // Transport Tradeoffs Domain
   comparisonTable: ComparisonRow[];
   updateComparisonTable: (data: ComparisonRow[]) => void;
 
-  // Performance Module
+  // Performance Implications Domain
   performanceData: ChartData[];
   failoverData: ChartData[];
   updatePerformanceData: (data: ChartData[]) => void;
   updateFailoverData: (data: ChartData[]) => void;
 
-  // Hardware Module
+  // Platform Considerations Domain
   products: ProductData[];
   updateProducts: (newProducts: ProductData[]) => void;
 
-  // HPC Module
+  // Scientific Workflow Context Domain
   hpcChecklist: HPCItem[];
   updateHpcChecklist: (data: HPCItem[]) => void;
 
-  // Roadmap Module
+  // Improvements / Roadmap Domain
   futureImprovements: typeof FUTURE_IMPROVEMENTS;
   updateFutureImprovements: (newImprovements: typeof FUTURE_IMPROVEMENTS) => void;
 
