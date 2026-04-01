@@ -4,6 +4,12 @@
 These instructions apply to the entire repository.
 
 ## Working directory
+- Standard repo bootstrap before working locally or on the GitHub-backed repo:
+```bash
+cd "/Users/theorajan/local builds/Aiworkloads"
+git checkout main
+git pull --ff-only origin main
+```
 - Front-end app lives in `ai-networking-education-center/`.
 - Run Node/Vite commands from that directory.
 
