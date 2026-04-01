@@ -15,8 +15,8 @@ const RDMA_SOURCE = {
 };
 
 export const CONCEPTS_SECTION_CONTENT = {
-  moduleLabel: 'Module 02',
-  title: 'Core Technologies',
+  moduleLabel: 'Domain · Data Movement',
+  title: 'Data Movement',
   subtitle: claim(
     'High-performance AI networking relies on foundational technologies that minimize latency and maximize data throughput between XPUs and storage.',
     RDMA_SOURCE

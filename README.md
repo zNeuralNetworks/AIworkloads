@@ -1,8 +1,10 @@
-# AI Networking Education Center
+# Scientific Workflow Architecture
 
-An interactive educational platform teaching modern AI networking — the hardware, protocols, and fabric architectures that power distributed AI training at scale. Covers the industry transition from InfiniBand to Ethernet-based fabrics (RoCEv2, Ultra Ethernet), with deep-dives on Arista hardware platforms, congestion control, and GPU cluster topologies.
+An architecture reference layer for understanding how workloads create infrastructure requirements.
 
 **Live:** [learn.polymathsystem.com](https://learn.polymathsystem.com)
+
+> **Product boundary:** This app frames workload/system behavior and architecture implications. Detailed node/NIC/leaf/spine/optics sizing belongs in the AI Cluster Planner inside Optics Master.
 
 ---
 

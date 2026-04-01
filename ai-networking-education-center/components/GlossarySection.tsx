@@ -10,19 +10,19 @@ interface Props {
 
 const DOMAINS = [
   'All',
-  'Architecture & Topology',
-  'Protocols & Transport',
-  'Traffic & Congestion',
-  'Hardware & Silicon',
-  'AI Workloads',
+  'Infrastructure & Topology',
+  'Data Movement & Transport',
+  'Congestion & Flow Control',
+  'Platform & Silicon',
+  'Workload Types',
 ] as const;
 
 const DOMAIN_COLORS: Record<string, string> = {
-  'Architecture & Topology': 'text-blue-300 border-blue-500/30 bg-blue-500/10',
-  'Protocols & Transport':   'text-purple-300 border-purple-500/30 bg-purple-500/10',
-  'Traffic & Congestion':    'text-orange-300 border-orange-500/30 bg-orange-500/10',
-  'Hardware & Silicon':      'text-cyan-300 border-cyan-500/30 bg-cyan-500/10',
-  'AI Workloads':            'text-emerald-300 border-emerald-500/30 bg-emerald-500/10',
+  'Infrastructure & Topology': 'text-blue-300 border-blue-500/30 bg-blue-500/10',
+  'Data Movement & Transport': 'text-purple-300 border-purple-500/30 bg-purple-500/10',
+  'Congestion & Flow Control': 'text-orange-300 border-orange-500/30 bg-orange-500/10',
+  'Platform & Silicon': 'text-cyan-300 border-cyan-500/30 bg-cyan-500/10',
+  'Workload Types': 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10',
 };
 
 const GlossarySection: React.FC<Props> = ({ initialSearch = '' }) => {
@@ -50,10 +50,10 @@ const GlossarySection: React.FC<Props> = ({ initialSearch = '' }) => {
         {/* Header */}
         <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-                <div className="text-teal-500 font-mono text-xs uppercase tracking-widest mb-4">Module 08</div>
+                <div className="text-teal-500 font-mono text-xs uppercase tracking-widest mb-4">Domain · Glossary</div>
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Technical Glossary</h2>
                 <p className="text-slate-400 max-w-2xl text-lg leading-relaxed">
-                    A comprehensive dictionary of AI networking terminology.
+                    Reference terminology for workload behavior, transport decisions, and infrastructure implications.
                 </p>
             </div>
 

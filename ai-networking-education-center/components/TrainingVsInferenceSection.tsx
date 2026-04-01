@@ -12,9 +12,9 @@ const TrainingVsInferenceSection: React.FC = () => {
         {/* Header */}
         <div className="mb-20 flex flex-col items-center text-center">
           <div className="text-violet-500 font-mono text-xs uppercase tracking-widest mb-4">
-            Module 08B
+            Domain · Workload Types
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Training vs Inference</h2>
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Workload Types</h2>
           <p className="text-slate-400 max-w-3xl mx-auto text-lg leading-relaxed">
             Training and inference clusters share hardware families but diverge sharply in traffic pattern,
             latency requirements, and fabric design. Getting this distinction wrong leads to over-provisioning

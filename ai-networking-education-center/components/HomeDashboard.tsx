@@ -70,7 +70,7 @@ const DashboardCard: React.FC<{
                   {progress}%
               </span>
           </div>
-          <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">Progress</span>
+          <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">Coverage Focus</span>
         </div>
         <motion.div 
           whileHover={{ x: 3 }}
