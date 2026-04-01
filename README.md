@@ -1,10 +1,12 @@
-# Scientific Workflow Architecture
+# Workload Architecture Reference
 
-An architecture reference layer for understanding how workloads create infrastructure requirements.
+An architecture decision reference for understanding how workload behavior drives infrastructure requirements.
 
 **Live:** [learn.polymathsystem.com](https://learn.polymathsystem.com)
 
 > **Product boundary:** This app frames workload/system behavior and architecture implications. Detailed node/NIC/leaf/spine/optics sizing belongs in the AI Cluster Planner inside Optics Master.
+>
+> **Positioning:** decision-first guidance for systems engineers, infrastructure architects, and AI/HPC platform teams.
 
 ---
 
