@@ -30,8 +30,8 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'architecture',
     anchorId: 'etherlink',
-    title: 'Architecture',
-    subtitle: 'How AI fabrics differ from legacy three-tier networks',
+    title: 'Architecture Patterns',
+    subtitle: 'Reference topology patterns and design constraints by workflow behavior',
     order: 1,
     tocVisible: true,
     page: 'main',
@@ -40,8 +40,8 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'concepts',
     anchorId: 'concepts',
-    title: 'Concepts',
-    subtitle: 'RDMA, NVMe-oF, RoCEv2 — the foundations of AI networking',
+    title: 'Data Movement',
+    subtitle: 'RDMA, NVMe-oF, and RoCEv2 primitives that shape system data paths',
     order: 2,
     tocVisible: true,
     page: 'main',
@@ -50,8 +50,8 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'protocols',
     anchorId: 'protocols',
-    title: 'Protocols',
-    subtitle: 'PFC, ECN, DCQCN and the RoCEv2 congestion control stack',
+    title: 'Transport & Congestion',
+    subtitle: 'Transport and congestion-control decisions tied to workload characteristics',
     order: 3,
     tocVisible: true,
     page: 'main',
@@ -69,8 +69,8 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'load-balancing',
     anchorId: 'load-balancing',
-    title: 'Load Balancing',
-    subtitle: 'ECMP, DLB, CLB and packet spraying compared',
+    title: 'Communication Patterns',
+    subtitle: 'Collective traffic behavior and path-distribution strategies',
     order: 5,
     tocVisible: true,
     page: 'main',
@@ -79,8 +79,8 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'comparison',
     anchorId: 'uec',
-    title: 'Comparison',
-    subtitle: 'RoCEv2 vs InfiniBand vs UET — technology tradeoffs',
+    title: 'Transport Tradeoffs',
+    subtitle: 'Tradeoff matrix for transport behavior, recovery, and scale assumptions',
     order: 6,
     tocVisible: true,
     page: 'main',
@@ -89,7 +89,7 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'performance',
     anchorId: 'performance',
-    title: 'Performance',
+    title: 'Performance Implications',
     subtitle: 'Latency, throughput, and collective communication benchmarks',
     order: 7,
     tocVisible: true,
@@ -99,7 +99,7 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'operations',
     anchorId: 'operations',
-    title: 'Ops Playbooks',
+    title: 'Operational Runbooks',
     order: 8,
     tocVisible: true,
     page: 'operations',
@@ -108,8 +108,8 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'hardware',
     anchorId: 'hardware',
-    title: 'Platforms',
-    subtitle: 'Arista switch platforms and silicon for AI fabrics',
+    title: 'Platform Considerations',
+    subtitle: 'Platform and silicon behavior relevant to scientific workflow infrastructure',
     order: 9,
     tocVisible: true,
     page: 'main',
@@ -118,7 +118,7 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'training-vs-inference',
     anchorId: 'training-vs-inference',
-    title: 'Training vs Inference',
+    title: 'Workload Types',
     subtitle: 'Traffic patterns, latency targets, and design tradeoffs',
     order: 10,
     tocVisible: true,
@@ -128,8 +128,8 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
   {
     id: 'hpc',
     anchorId: 'hpc',
-    title: 'AI vs HPC',
-    subtitle: 'How AI training differs from traditional HPC networking',
+    title: 'Scientific Workflow Context',
+    subtitle: 'Scientific/HPC workflow context and where behavior diverges from AI training',
     order: 11,
     tocVisible: true,
     page: 'main',

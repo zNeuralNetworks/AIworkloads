@@ -11,10 +11,10 @@ const ComparisonTable: React.FC = () => {
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
             <div>
-                <div className="text-emerald-500 font-mono text-xs uppercase tracking-widest mb-4">Module 05</div>
-                <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Legacy vs. Modern</h2>
+                <div className="text-emerald-500 font-mono text-xs uppercase tracking-widest mb-4">Domain · Transport Tradeoffs</div>
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Transport Tradeoffs</h2>
                 <p className="text-slate-400 max-w-2xl">
-                    Why the industry is moving from InfiniBand to Ultra Ethernet (UEC) for AI workloads.
+                    Tradeoff view across transport models for reliability, ordering, and congestion behavior.
                 </p>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">

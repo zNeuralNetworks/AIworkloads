@@ -36,12 +36,10 @@ const LoadBalancingSection: React.FC = () => {
       <div className="container mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="text-orange-500 font-mono text-xs uppercase tracking-widest mb-4">Module 04</div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Load Balancing</h2>
+          <div className="text-orange-500 font-mono text-xs uppercase tracking-widest mb-4">Domain · Communication Patterns</div>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Communication Patterns</h2>
           <p className="text-slate-400 max-w-2xl mx-auto">
-            How AI fabrics distribute{' '}
-            <GlossaryTerm term="Elephant Flow">elephant flows</GlossaryTerm> across equal-cost paths —
-            from static hashing to collective-aware spine allocation.
+            How collective communication patterns drive pathing behavior, imbalance risk, and congestion response.
           </p>
         </div>
 

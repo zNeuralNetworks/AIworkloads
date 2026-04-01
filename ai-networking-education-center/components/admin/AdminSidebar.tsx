@@ -37,18 +37,18 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, on
         </div>
 
         <div>
-            <div className="text-[10px] font-bold text-slate-500 uppercase px-3 mb-2 tracking-wider">Technical Modules</div>
-            <NavButton icon={Box} label="Architecture (Scaling)" active={activeTab === 'architecture'} onClick={() => setActiveTab('architecture')} />
-            <NavButton icon={Cpu} label="Core Technologies" active={activeTab === 'concepts'} onClick={() => setActiveTab('concepts')} />
-            <NavButton icon={Network} label="Protocols" active={activeTab === 'protocols'} onClick={() => setActiveTab('protocols')} />
-            <NavButton icon={GitCompare} label="Legacy vs Modern" active={activeTab === 'comparison'} onClick={() => setActiveTab('comparison')} />
-            <NavButton icon={Server} label="Products & Hardware" active={activeTab === 'products'} onClick={() => setActiveTab('products')} />
-            <NavButton icon={Database} label="HPC Checklist" active={activeTab === 'hpc'} onClick={() => setActiveTab('hpc')} />
+            <div className="text-[10px] font-bold text-slate-500 uppercase px-3 mb-2 tracking-wider">Architecture Domains</div>
+            <NavButton icon={Box} label="Architecture Patterns" active={activeTab === 'architecture'} onClick={() => setActiveTab('architecture')} />
+            <NavButton icon={Cpu} label="Data Movement" active={activeTab === 'concepts'} onClick={() => setActiveTab('concepts')} />
+            <NavButton icon={Network} label="Transport & Congestion" active={activeTab === 'protocols'} onClick={() => setActiveTab('protocols')} />
+            <NavButton icon={GitCompare} label="Transport Tradeoffs" active={activeTab === 'comparison'} onClick={() => setActiveTab('comparison')} />
+            <NavButton icon={Server} label="Platform Considerations" active={activeTab === 'products'} onClick={() => setActiveTab('products')} />
+            <NavButton icon={Database} label="Scientific Workflow Context" active={activeTab === 'hpc'} onClick={() => setActiveTab('hpc')} />
         </div>
 
         <div>
             <div className="text-[10px] font-bold text-slate-500 uppercase px-3 mb-2 tracking-wider">Data & Analytics</div>
-            <NavButton icon={BarChart2} label="Performance Charts" active={activeTab === 'performance'} onClick={() => setActiveTab('performance')} />
+            <NavButton icon={BarChart2} label="Performance Implications" active={activeTab === 'performance'} onClick={() => setActiveTab('performance')} />
             <NavButton icon={FileText} label="Glossary Terms" active={activeTab === 'glossary'} onClick={() => setActiveTab('glossary')} />
             <NavButton icon={Settings} label="Suggested Improvements" active={activeTab === 'future'} onClick={() => setActiveTab('future')} />
         </div>

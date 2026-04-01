@@ -45,10 +45,10 @@ const MainPage: React.FC = () => {
       <StickyModuleHeader />
 
       <main>
-        {/* Interactive Bento-Grid Dashboard */}
+        {/* Architecture Domain Dashboard */}
         <HomeDashboard />
 
-        {/* Educational Modules (Scrollable) */}
+        {/* Architecture Reference Sections (Scrollable) */}
         {mainModules.map(({ id, component: SectionComponent }) => (
           <React.Fragment key={id}>
             <FadeIn>

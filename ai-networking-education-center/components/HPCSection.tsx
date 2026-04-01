@@ -15,9 +15,9 @@ const HPCSection: React.FC = () => {
         {/* Header */}
         <div className="mb-20 flex flex-col items-center text-center">
           <div className="text-emerald-500 font-mono text-xs uppercase tracking-widest mb-4">
-            Module 07
+            Domain · Scientific Workflow Context
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">AI Networking vs. HPC</h2>
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Scientific Workflow Context</h2>
           <p className="text-slate-400 max-w-3xl mx-auto text-lg leading-relaxed">
             Both live in the family of "extreme throughput, low-latency distributed compute," but
             they diverge in traffic shape, sensitivity, and failure tolerance.

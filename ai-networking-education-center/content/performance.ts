@@ -10,7 +10,7 @@ const ETHERLINK_SOURCE = {
 };
 
 export const PERFORMANCE_SECTION_CONTENT = {
-  moduleLabel: 'Module 05',
+  moduleLabel: 'Domain · Performance Implications',
   title: 'Performance Metrics',
   subtitle: claim(
     'Telemetry showing the impact of congestion control and failover on Job Completion Time (JCT).',
