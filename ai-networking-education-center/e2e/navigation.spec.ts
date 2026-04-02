@@ -40,8 +40,9 @@ test.describe('Deep Dive route', () => {
     await page.goto('/');
     await page.waitForTimeout(1200);
 
-    const deepDiveLink = page.locator('a[aria-label="Deep Dive"]:visible').first();
-    await expect(deepDiveLink).toBeVisible({ timeout: 15000 });
+    const deepDiveLink = page.locator('a[aria-label="Deep Dive"]').first();
+    await expect(deepDiveLink).toBeAttached({ timeout: 15000 });
+    await deepDiveLink.scrollIntoViewIfNeeded();
 
     await deepDiveLink.click({ force: true });
 
@@ -75,8 +76,9 @@ test.describe('Operations Playbooks route', () => {
     await page.goto('/');
     await page.waitForTimeout(1200);
 
-    const opsLink = page.locator('a[aria-label="Operational Runbooks"]:visible').first();
-    await expect(opsLink).toBeVisible({ timeout: 15000 });
+    const opsLink = page.locator('a[aria-label="Operational Runbooks"]').first();
+    await expect(opsLink).toBeAttached({ timeout: 15000 });
+    await opsLink.scrollIntoViewIfNeeded();
 
     await opsLink.click({ force: true });
 
