@@ -1,5 +1,6 @@
 import React, { ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { clearAppStorage } from '../utils/safeStorage';
 
 interface Props {
   children?: ReactNode;
@@ -26,10 +27,7 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   private handleReset = () => {
-    Object.keys(localStorage)
-      .filter((key) => key === 'app_version' || key.startsWith('app_'))
-      .forEach((key) => localStorage.removeItem(key));
-
+    clearAppStorage();
     window.location.reload();
   };
 

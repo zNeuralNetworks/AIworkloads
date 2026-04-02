@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Share2, Grid, Clock, AlertTriangle, Zap, Network, GitGraph, Activity, CheckCircle2 } from 'lucide-react';
+import React from 'react';
+import { Share2, Grid, Clock, Zap, Network, GitGraph, Activity, CheckCircle2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { HPCItem } from '../types';
 import { ICON_MAP, VALIDATION_PHASES } from '../constants';
@@ -60,16 +60,16 @@ const HPCSection: React.FC = () => {
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
           {/* AI Side */}
           <div className="bg-[#161b22] rounded-2xl border border-white/5 overflow-hidden flex flex-col">
-            <div className="p-1 bg-gradient-to-r from-blue-600 to-cyan-400 opacity-20"></div>
+            <div className="p-1 bg-gradient-to-r from-blue-700 to-blue-400 opacity-20"></div>
             <div className="p-8 flex-1">
               <div className="flex justify-between items-start mb-8">
                 <div>
-                  <div className="text-cyan-400 font-mono text-xs uppercase tracking-wider mb-2">
+                  <div className="text-blue-400 font-mono text-xs uppercase tracking-wider mb-2">
                     Traffic Pattern
                   </div>
                   <h3 className="text-2xl font-bold text-white">All-to-All Collective</h3>
                 </div>
-                <div className="p-3 bg-cyan-900/20 rounded-lg text-cyan-400">
+                <div className="p-3 bg-blue-900/20 rounded-lg text-blue-400">
                   <Share2 size={24} />
                 </div>
               </div>
@@ -84,7 +84,7 @@ const HPCSection: React.FC = () => {
                   {[0, 1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className="absolute w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.5)] z-10"
+                      className="absolute w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] z-10"
                       style={{
                         top: `${50 + 35 * Math.sin(i * 1.25)}%`,
                         left: `${50 + 35 * Math.cos(i * 1.25)}%`,
@@ -94,19 +94,19 @@ const HPCSection: React.FC = () => {
                   <svg className="absolute inset-0 w-full h-full opacity-40">
                     <path
                       d="M20,50 L80,50 M20,50 L50,20 M20,50 L50,80"
-                      stroke="#22d3ee"
+                      stroke="#60a5fa"
                       strokeWidth="1"
                       className="animate-pulse"
                     />
                     <path
                       d="M80,50 L50,20 M80,50 L50,80"
-                      stroke="#22d3ee"
+                      stroke="#60a5fa"
                       strokeWidth="1"
                       className="animate-pulse delay-75"
                     />
                     <path
                       d="M50,20 L50,80"
-                      stroke="#22d3ee"
+                      stroke="#60a5fa"
                       strokeWidth="1"
                       className="animate-pulse delay-150"
                     />
@@ -115,7 +115,7 @@ const HPCSection: React.FC = () => {
               </div>
               <ul className="space-y-4">
                 <li className="flex gap-4 items-start text-sm text-slate-300">
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0 shadow-[0_0_5px_rgba(34,211,238,0.5)]"></div>
+                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0 shadow-[0_0_5px_rgba(59,130,246,0.5)]"></div>
                   <span>
                     <strong className="text-white">Heavy Sync:</strong> Every GPU talks to every
                     other GPU (All-Reduce).
@@ -127,7 +127,7 @@ const HPCSection: React.FC = () => {
 
           {/* HPC Side */}
           <div className="bg-[#161b22] rounded-2xl border border-white/5 overflow-hidden flex flex-col">
-            <div className="p-1 bg-gradient-to-r from-amber-500 to-orange-600 opacity-20"></div>
+            <div className="p-1 bg-gradient-to-r from-amber-500 to-amber-700 opacity-20"></div>
             <div className="p-8 flex-1">
               <div className="flex justify-between items-start mb-8">
                 <div>
@@ -170,16 +170,16 @@ const HPCSection: React.FC = () => {
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
           {/* AI Side */}
           <div className="bg-[#161b22] rounded-2xl border border-white/5 overflow-hidden flex flex-col">
-            <div className="p-1 bg-gradient-to-r from-blue-600 to-cyan-400 opacity-20"></div>
+            <div className="p-1 bg-gradient-to-r from-blue-700 to-blue-400 opacity-20"></div>
             <div className="p-8 flex-1">
               <div className="flex justify-between items-start mb-8">
                 <div>
-                  <div className="text-cyan-400 font-mono text-xs uppercase tracking-wider mb-2">
+                  <div className="text-blue-400 font-mono text-xs uppercase tracking-wider mb-2">
                     Completion Time
                   </div>
                   <h3 className="text-2xl font-bold text-white">The "Straggler" Effect</h3>
                 </div>
-                <div className="p-3 bg-cyan-900/20 rounded-lg text-cyan-400">
+                <div className="p-3 bg-blue-900/20 rounded-lg text-blue-400">
                   <Clock size={24} />
                 </div>
               </div>
@@ -193,9 +193,9 @@ const HPCSection: React.FC = () => {
 
                 <div className="flex-1 flex flex-col gap-3">
                   {/* Fast Jobs */}
-                  <div className="h-2 w-[80%] bg-cyan-500/50 rounded-full relative"></div>
-                  <div className="h-2 w-[82%] bg-cyan-500/50 rounded-full relative"></div>
-                  <div className="h-2 w-[79%] bg-cyan-500/50 rounded-full relative"></div>
+                  <div className="h-2 w-[80%] bg-blue-500/50 rounded-full relative"></div>
+                  <div className="h-2 w-[82%] bg-blue-500/50 rounded-full relative"></div>
+                  <div className="h-2 w-[79%] bg-blue-500/50 rounded-full relative"></div>
                   {/* Straggler */}
                   <div className="h-2 w-[40%] bg-red-500 rounded-full relative animate-pulse flex items-center">
                     <span className="absolute left-full ml-2 text-[10px] text-red-400 font-bold whitespace-nowrap">
@@ -207,7 +207,7 @@ const HPCSection: React.FC = () => {
 
               <ul className="space-y-4">
                 <li className="flex gap-4 items-start text-sm text-slate-300">
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0"></div>
+                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></div>
                   <span>
                     <strong className="text-white">Barrier Sync:</strong> If GPU 4 is slow, all 1024
                     GPUs wait.
@@ -226,7 +226,7 @@ const HPCSection: React.FC = () => {
 
           {/* HPC Side */}
           <div className="bg-[#161b22] rounded-2xl border border-white/5 overflow-hidden flex flex-col">
-            <div className="p-1 bg-gradient-to-r from-amber-500 to-orange-600 opacity-20"></div>
+            <div className="p-1 bg-gradient-to-r from-amber-500 to-amber-700 opacity-20"></div>
             <div className="p-8 flex-1">
               <div className="flex justify-between items-start mb-8">
                 <div>
@@ -276,16 +276,16 @@ const HPCSection: React.FC = () => {
         <div className="grid lg:grid-cols-2 gap-8 mb-24">
           {/* AI Side */}
           <div className="bg-[#161b22] rounded-2xl border border-white/5 overflow-hidden flex flex-col">
-            <div className="p-1 bg-gradient-to-r from-blue-600 to-cyan-400 opacity-20"></div>
+            <div className="p-1 bg-gradient-to-r from-blue-700 to-blue-400 opacity-20"></div>
             <div className="p-8 flex-1">
               <div className="flex justify-between items-start mb-8">
                 <div>
-                  <div className="text-cyan-400 font-mono text-xs uppercase tracking-wider mb-2">
+                  <div className="text-blue-400 font-mono text-xs uppercase tracking-wider mb-2">
                     Topology
                   </div>
                   <h3 className="text-2xl font-bold text-white">Fat-Tree / Clos</h3>
                 </div>
-                <div className="p-3 bg-cyan-900/20 rounded-lg text-cyan-400">
+                <div className="p-3 bg-blue-900/20 rounded-lg text-blue-400">
                   <GitGraph size={24} />
                 </div>
               </div>
@@ -295,10 +295,10 @@ const HPCSection: React.FC = () => {
                   {/* Abstract Tree */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex gap-4">
-                      <div className="w-8 h-2 bg-cyan-500/50 rounded"></div>
-                      <div className="w-8 h-2 bg-cyan-500/50 rounded"></div>
+                      <div className="w-8 h-2 bg-blue-500/50 rounded"></div>
+                      <div className="w-8 h-2 bg-blue-500/50 rounded"></div>
                     </div>
-                    <div className="w-full h-px bg-cyan-500/20"></div>
+                    <div className="w-full h-px bg-blue-500/20"></div>
                     <div className="flex gap-2">
                       <div className="w-6 h-2 bg-slate-700 rounded"></div>
                       <div className="w-6 h-2 bg-slate-700 rounded"></div>
@@ -312,14 +312,14 @@ const HPCSection: React.FC = () => {
 
               <ul className="space-y-4">
                 <li className="flex gap-4 items-start text-sm text-slate-300">
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0"></div>
+                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></div>
                   <span>
                     <strong className="text-white">Zero Oversubscription:</strong> Non-blocking
                     bandwidth is critical.
                   </span>
                 </li>
                 <li className="flex gap-4 items-start text-sm text-slate-300">
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0"></div>
+                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></div>
                   <span>
                     <strong className="text-white">Network Functions:</strong> Needs RoCEv2 and
                     ECN; SmartNIC/DPU offload is optional depending on deployment.
@@ -331,7 +331,7 @@ const HPCSection: React.FC = () => {
 
           {/* HPC Side */}
           <div className="bg-[#161b22] rounded-2xl border border-white/5 overflow-hidden flex flex-col">
-            <div className="p-1 bg-gradient-to-r from-amber-500 to-orange-600 opacity-20"></div>
+            <div className="p-1 bg-gradient-to-r from-amber-500 to-amber-700 opacity-20"></div>
             <div className="p-8 flex-1">
               <div className="flex justify-between items-start mb-8">
                 <div>
@@ -430,10 +430,10 @@ const HPCSection: React.FC = () => {
               return (
                 <div
                   key={i}
-                  className="bg-[#161b22] p-6 rounded-xl border border-white/5 hover:border-cyan-500/30 transition-colors group"
+                  className="bg-[#161b22] p-6 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors group"
                 >
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-[#0d1117] rounded-lg text-cyan-400 group-hover:text-cyan-300 group-hover:bg-cyan-900/20 transition-colors">
+                    <div className="p-2 bg-[#0d1117] rounded-lg text-blue-400 group-hover:text-blue-300 group-hover:bg-blue-900/20 transition-colors">
                       <Icon size={20} />
                     </div>
                     <h4 className="font-bold text-white text-sm font-mono uppercase tracking-wide">
@@ -447,7 +447,7 @@ const HPCSection: React.FC = () => {
                         className="text-sm text-slate-400 flex items-start gap-2 leading-relaxed"
                         data-claim-id={hasSourceMetadata(pt) ? pt.claimId : undefined}
                       >
-                        <span className="text-cyan-500 mt-1.5 w-1 h-1 bg-cyan-500 rounded-full shrink-0"></span>
+                        <span className="text-blue-500 mt-1.5 w-1 h-1 bg-blue-500 rounded-full shrink-0"></span>
                         <span>{claimText(pt)}</span>
                         {hasSourceMetadata(pt) && <SourceBadge claim={pt} className="ml-2" />}
                       </li>
@@ -460,11 +460,11 @@ const HPCSection: React.FC = () => {
         </div>
 
         {/* Final Story */}
-        <div className="bg-gradient-to-r from-blue-900/10 to-cyan-900/10 rounded-2xl p-12 text-center border border-white/10">
+        <div className="bg-gradient-to-r from-blue-900/10 to-blue-700/10 rounded-2xl p-12 text-center border border-white/10">
           <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-widest font-mono">
             The Takeaway
           </h3>
-          <p className="text-2xl text-cyan-100 font-serif italic max-w-4xl mx-auto leading-relaxed">
+          <p className="text-2xl text-blue-100 font-serif italic max-w-4xl mx-auto leading-relaxed">
             "We accelerate distributed training by delivering stable, low-latency, congestion-aware
             fabrics that maximize GPU utilization and reduce training time."
           </p>

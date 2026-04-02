@@ -40,11 +40,8 @@ export const useSupabaseSync = (options: UseSupabaseSyncOptions = {}) => {
     updateGlossary,
     products,
     updateProducts,
-    hpcChecklist,
     updateHpcChecklist,
-    performanceData,
     updatePerformanceData,
-    protocolConcepts,
     updateProtocolConcepts,
   } = useData();
 

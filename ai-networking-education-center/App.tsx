@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { LearningProvider } from './contexts/LearningContext';
+import { isSupabaseConfigured } from './config/supabase';
 import { initializeSentry } from './services/sentry';
 import ErrorBoundary from './components/ErrorBoundary';
 import MainPage from './pages/MainPage';
@@ -33,9 +35,8 @@ initializeSentry();
 
 const App: React.FC = () => {
   useEffect(() => {
-    // Verify environment configuration on mount
-    if (!import.meta.env.VITE_SUPABASE_URL) {
-      console.warn('Supabase not configured; using local-only mode');
+    if (!isSupabaseConfigured) {
+      console.warn('Supabase not configured; admin authentication and sync are disabled');
     }
   }, []);
 
@@ -43,17 +44,19 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <Sentry.ErrorBoundary fallback={<div>An error occurred</div>}>
         <AuthProvider>
-          <DataProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<MainPage />} />
-                <Route path="/operations" element={<OperationsPage />} />
-                <Route path="/glossary" element={<GlossaryPage />} />
-                <Route path="/deep-dive" element={<DeepDivePage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </BrowserRouter>
-          </DataProvider>
+          <LearningProvider>
+            <DataProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<MainPage />} />
+                  <Route path="/operations" element={<OperationsPage />} />
+                  <Route path="/glossary" element={<GlossaryPage />} />
+                  <Route path="/deep-dive" element={<DeepDivePage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </BrowserRouter>
+            </DataProvider>
+          </LearningProvider>
         </AuthProvider>
       </Sentry.ErrorBoundary>
     </ErrorBoundary>

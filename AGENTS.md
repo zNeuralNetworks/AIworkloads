@@ -12,6 +12,11 @@ git pull --ff-only origin main
 ```
 - Front-end app lives in `ai-networking-education-center/`.
 - Run Node/Vite commands from that directory.
+- Treat `ai-networking-education-center/` as the only application root.
+- Treat `/.github/` as the only authoritative GitHub workflow location.
+- Historical notes and review artifacts live under `docs/archive/root-history/`.
+- Assistant-specific metadata lives under `docs/internal/assistant/` and should not be treated as product code.
+- Rebrand/reframe continuity file: `docs/internal/REBRAND_REFRAME_STATUS.md`.
 
 ## Common workflows and commands
 ```bash

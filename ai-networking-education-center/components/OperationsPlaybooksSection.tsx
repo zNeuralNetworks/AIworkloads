@@ -9,15 +9,15 @@ import {
 
 const SEVERITY_STYLES: Record<string, string> = {
   Critical: 'bg-red-500/10 text-red-300 border-red-500/20',
-  'High Priority': 'bg-orange-500/10 text-orange-300 border-orange-500/20',
-  'Medium Priority': 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20',
+  'High Priority': 'bg-violet-500/10 text-violet-300 border-violet-500/20',
+  'Medium Priority': 'bg-blue-500/10 text-blue-300 border-blue-500/20',
 };
 
 const SEVERITY_FILTER_STYLES: Record<string, string> = {
   All: 'bg-slate-700 text-slate-200',
   Critical: 'bg-red-500/20 text-red-300 border-red-500/30',
-  'High Priority': 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-  'Medium Priority': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+  'High Priority': 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+  'Medium Priority': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
 };
 
 /** Extract the CLI command text before the " — " description separator. */
@@ -60,14 +60,14 @@ const OperationsPlaybooksSection: React.FC = () => {
       <div className="container mx-auto px-6">
         <div className="mb-12 flex flex-col md:flex-row justify-between items-start gap-6">
           <div>
-            <div className="text-amber-400 font-mono text-xs uppercase tracking-widest mb-4">Domain · Operational Runbooks</div>
+            <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Domain · Operational Runbooks</div>
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Operations Playbooks</h2>
             <p className="text-slate-400 max-w-3xl">
               Turn networking concepts into repeatable day-2 operations with vendor-neutral design principles,
               incident runbooks, and migration decision guidance.
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-amber-300 text-xs font-mono uppercase tracking-wide whitespace-nowrap">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-blue-300 text-xs font-mono uppercase tracking-wide whitespace-nowrap">
             <BookCheck size={14} /> Implementation Ready
           </div>
         </div>
@@ -76,7 +76,7 @@ const OperationsPlaybooksSection: React.FC = () => {
         <div className="grid lg:grid-cols-3 gap-6 mb-10">
           {OPERATIONS_PRINCIPLES.map((item) => (
             <div key={item.title} className="bg-[#161b22] border border-white/5 rounded-2xl p-6">
-              <div className="flex items-center gap-2 text-cyan-300 mb-3">
+              <div className="flex items-center gap-2 text-blue-300 mb-3">
                 <Network size={14} />
                 <span className="text-xs font-mono uppercase">Vendor-Neutral Principle</span>
               </div>
@@ -141,7 +141,7 @@ const OperationsPlaybooksSection: React.FC = () => {
                 {isExpanded && (
                   <div className="px-6 pb-6 pt-2 border-t border-white/5 space-y-4 text-sm">
                     <p className="text-slate-300">
-                      <span className="text-amber-300 font-semibold inline-flex items-center gap-1">
+                      <span className="text-blue-300 font-semibold inline-flex items-center gap-1">
                         <AlertTriangle size={12} /> Symptom:
                       </span>{' '}
                       {book.symptom}

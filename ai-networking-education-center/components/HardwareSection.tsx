@@ -115,13 +115,16 @@ const HardwareSection: React.FC = () => {
 
   // Update active product if data changes (e.g. from Admin edit)
   useEffect(() => {
-    if (products.length > 0 && activeProduct) {
-      // Try to keep the same product active by ID, else fallback to first
-      const current = products.find((p) => p.id === activeProduct.id);
-      setActiveProduct(current || products[0]);
-    } else if (products.length > 0) {
-      setActiveProduct(products[0]);
-    }
+    if (products.length === 0) return;
+
+    setActiveProduct((currentActiveProduct) => {
+      if (!currentActiveProduct) {
+        return products[0];
+      }
+
+      const matchingProduct = products.find((product) => product.id === currentActiveProduct.id);
+      return matchingProduct || products[0];
+    });
   }, [products]);
 
   // Fade the spec sheet when switching products
@@ -140,7 +143,7 @@ const HardwareSection: React.FC = () => {
     <section id="hardware" className="py-32 bg-[#0F1117] border-t border-white/5">
       <div className="container mx-auto px-6">
         <div className="mb-16">
-          <div className="text-cyan-500 font-mono text-xs uppercase tracking-widest mb-4">
+          <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">
             Module 06
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
@@ -164,18 +167,18 @@ const HardwareSection: React.FC = () => {
                 onClick={() => setActiveProduct(product)}
                 className={`text-left p-4 rounded-lg border transition-all duration-200 group relative overflow-hidden ${
                   activeProduct.id === product.id
-                    ? 'bg-cyan-950/30 border-cyan-500/50 text-white'
+                    ? 'bg-blue-950/30 border-blue-500/50 text-white'
                     : 'bg-[#161b22] border-white/5 text-slate-400 hover:border-slate-600'
                 }`}
                 aria-pressed={activeProduct.id === product.id}
               >
                 {activeProduct.id === product.id && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500"></div>
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
                 )}
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold font-mono tracking-tight">{product.series}</span>
                   {activeProduct.id === product.id && (
-                    <ChevronRight size={14} className="text-cyan-400" />
+                    <ChevronRight size={14} className="text-blue-400" />
                   )}
                 </div>
                 <div className="text-xs opacity-70 truncate">{product.role}</div>
@@ -204,13 +207,13 @@ const HardwareSection: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/5 pb-8 mb-8 gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-cyan-500/10 rounded text-cyan-400">
+                  <div className="p-2 bg-blue-500/10 rounded text-blue-400">
                     <ProductIcon size={24} />
                   </div>
                   <h3 className="text-3xl font-bold text-white">{activeProduct.series}</h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="text-cyan-500 font-mono text-sm">{activeProduct.role}</div>
+                  <div className="text-blue-500 font-mono text-sm">{activeProduct.role}</div>
                   {activeProduct.scale && (
                     <>
                       <span className="text-slate-700">·</span>
@@ -261,7 +264,7 @@ const HardwareSection: React.FC = () => {
                       href={activeProduct.datasheetUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-cyan-950/20 border border-cyan-500/20 rounded hover:bg-cyan-900/30 hover:border-cyan-500/40 transition-colors text-cyan-400 text-xs font-bold font-mono uppercase tracking-wide group"
+                      className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-950/20 border border-blue-500/20 rounded hover:bg-blue-900/30 hover:border-blue-500/40 transition-colors text-blue-400 text-xs font-bold font-mono uppercase tracking-wide group"
                     >
                       <ExternalLink
                         size={14}
@@ -284,10 +287,10 @@ const HardwareSection: React.FC = () => {
                         return (
                           <div
                             key={i}
-                            className="bg-[#0d1117] border border-white/5 border-t-2 border-t-cyan-500/30 rounded-lg p-3"
+                            className="bg-[#0d1117] border border-white/5 border-t-2 border-t-blue-500/30 rounded-lg p-3"
                           >
                             {FeatureIcon && (
-                              <FeatureIcon size={14} className="text-cyan-400 mb-2" />
+                              <FeatureIcon size={14} className="text-blue-400 mb-2" />
                             )}
                             <div className="text-xs text-slate-500 font-mono mb-1">
                               {feature.label}
@@ -314,9 +317,9 @@ const HardwareSection: React.FC = () => {
                       {activeProduct.variants.map((v, i) => (
                         <div
                           key={i}
-                          className="flex items-center justify-between p-3 bg-[#0d1117] border border-white/5 rounded hover:border-cyan-500/30 transition-colors"
+                          className="flex items-center justify-between p-3 bg-[#0d1117] border border-white/5 rounded hover:border-blue-500/30 transition-colors"
                         >
-                          <span className="text-cyan-100 font-mono text-xs font-bold">
+                          <span className="text-blue-100 font-mono text-xs font-bold">
                             {v.name}
                           </span>
                           <div className="flex gap-4 text-xs text-slate-500 font-mono">
@@ -366,10 +369,10 @@ const HardwareSection: React.FC = () => {
                             <div className="h-1 w-full bg-slate-800 rounded-full"></div>
                           </div>
                         ))}
-                        <div className="absolute -right-12 top-10 text-xs text-cyan-400 font-mono">
+                        <div className="absolute -right-12 top-10 text-xs text-blue-400 font-mono">
                           ← Linecards
                         </div>
-                        <div className="absolute -left-16 bottom-4 text-xs text-cyan-400 font-mono">
+                        <div className="absolute -left-16 bottom-4 text-xs text-blue-400 font-mono">
                           Fabric →
                         </div>
                       </div>
@@ -378,7 +381,7 @@ const HardwareSection: React.FC = () => {
                         <div className="w-full h-8 bg-[#1e293b] border border-slate-600 rounded-sm flex items-center justify-center text-[8px] text-slate-500">
                           Leaf 1
                         </div>
-                        <div className="w-full h-12 border-2 border-dashed border-cyan-900 rounded bg-cyan-900/10 flex items-center justify-center text-[10px] text-cyan-400 font-mono">
+                        <div className="w-full h-12 border-2 border-dashed border-blue-900 rounded bg-blue-900/10 flex items-center justify-center text-[10px] text-blue-400 font-mono">
                           Distributed Fabric
                         </div>
                         <div className="w-full h-8 bg-[#1e293b] border border-slate-600 rounded-sm flex items-center justify-center text-[8px] text-slate-500">
@@ -386,13 +389,13 @@ const HardwareSection: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="w-full h-8 bg-[#1e293b] border border-slate-600 rounded-sm flex items-center px-2 gap-2 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                      <div className="w-full h-8 bg-[#1e293b] border border-slate-600 rounded-sm flex items-center px-2 gap-2 shadow-[0_0_15px_rgba(59,130,246,0.12)]">
                         <div className="flex-1 flex gap-0.5">
                           {[...Array(12)].map((_, i) => (
                             <div key={i} className="w-1 h-2 bg-slate-500"></div>
                           ))}
                         </div>
-                        <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]"></div>
+                        <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_5px_#60a5fa]"></div>
                       </div>
                     )}
                   </div>

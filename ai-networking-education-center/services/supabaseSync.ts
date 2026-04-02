@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import { ProductData, ChartData, ProtocolConcept, HPCItem, ScalingConcept, ConceptData, ComparisonRow } from '../types';
+import { ProductData, ChartData, ProtocolConcept, HPCItem } from '../types';
 import { captureException } from './sentry';
 
 interface SyncOptions {
@@ -9,15 +9,25 @@ interface SyncOptions {
 
 const DEFAULT_RETRIES = 3;
 
+const getSupabaseClient = (context: string) => {
+  if (supabase) {
+    return supabase;
+  }
+
+  const error = new Error(`Supabase is not configured for ${context}`);
+  throw error;
+};
+
 /**
  * Sync Glossary from Supabase
  */
 export async function syncGlossaryFromSupabase(options: SyncOptions = {}): Promise<Record<string, string>> {
   const { retries = DEFAULT_RETRIES } = options;
+  const client = getSupabaseClient('glossary sync');
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const { data, error } = await supabase.from('glossary').select('*');
+      const { data, error } = await client.from('glossary').select('*');
 
       if (error) throw error;
       if (!data || data.length === 0) return {};
@@ -47,10 +57,11 @@ export async function syncGlossaryFromSupabase(options: SyncOptions = {}): Promi
  */
 export async function syncProductsFromSupabase(options: SyncOptions = {}): Promise<ProductData[]> {
   const { retries = DEFAULT_RETRIES } = options;
+  const client = getSupabaseClient('products sync');
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const { data, error } = await supabase.from('products').select('*').order('id', { ascending: true });
+      const { data, error } = await client.from('products').select('*').order('id', { ascending: true });
 
       if (error) throw error;
       return data || [];
@@ -73,10 +84,11 @@ export async function syncProductsFromSupabase(options: SyncOptions = {}): Promi
  */
 export async function syncHpcChecklistFromSupabase(options: SyncOptions = {}): Promise<HPCItem[]> {
   const { retries = DEFAULT_RETRIES } = options;
+  const client = getSupabaseClient('HPC checklist sync');
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const { data, error } = await supabase.from('hpc_items').select('*').order('order', { ascending: true });
+      const { data, error } = await client.from('hpc_items').select('*').order('order', { ascending: true });
 
       if (error) throw error;
       return data || [];
@@ -99,10 +111,11 @@ export async function syncHpcChecklistFromSupabase(options: SyncOptions = {}): P
  */
 export async function syncPerformanceDataFromSupabase(options: SyncOptions = {}): Promise<ChartData[]> {
   const { retries = DEFAULT_RETRIES } = options;
+  const client = getSupabaseClient('performance data sync');
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('performance_data')
         .select('*')
         .order('name', { ascending: true });
@@ -128,10 +141,11 @@ export async function syncPerformanceDataFromSupabase(options: SyncOptions = {})
  */
 export async function syncProtocolConceptsFromSupabase(options: SyncOptions = {}): Promise<ProtocolConcept[]> {
   const { retries = DEFAULT_RETRIES } = options;
+  const client = getSupabaseClient('protocol concepts sync');
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('protocol_concepts')
         .select('*')
         .order('name', { ascending: true });
@@ -161,6 +175,7 @@ export async function uploadGlossaryToSupabase(
   options: SyncOptions = {}
 ): Promise<void> {
   const { retries = DEFAULT_RETRIES } = options;
+  const client = getSupabaseClient('glossary upload');
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
@@ -172,7 +187,7 @@ export async function uploadGlossaryToSupabase(
       }));
 
       // Upsert: insert or update based on term
-      const { error } = await supabase.from('glossary').upsert(items, { onConflict: 'term' });
+      const { error } = await client.from('glossary').upsert(items, { onConflict: 'term' });
 
       if (error) throw error;
       return;
@@ -197,6 +212,7 @@ export async function uploadProductsToSupabase(
   options: SyncOptions = {}
 ): Promise<void> {
   const { retries = DEFAULT_RETRIES } = options;
+  const client = getSupabaseClient('products upload');
 
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
@@ -206,7 +222,7 @@ export async function uploadProductsToSupabase(
         updated_at: new Date().toISOString(),
       }));
 
-      const { error } = await supabase.from('products').upsert(items, { onConflict: 'id' });
+      const { error } = await client.from('products').upsert(items, { onConflict: 'id' });
 
       if (error) throw error;
       return;
@@ -229,7 +245,19 @@ export function subscribeToGlossaryChanges(
   callback: (glossary: Record<string, string>) => void,
   onError?: (error: Error) => void
 ) {
-  const channel = supabase
+  let client;
+
+  try {
+    client = getSupabaseClient('glossary realtime subscription');
+  } catch (error) {
+    const normalizedError =
+      error instanceof Error ? error : new Error('Supabase is not configured for realtime');
+    captureException(normalizedError);
+    onError?.(normalizedError);
+    return () => undefined;
+  }
+
+  const channel = client
     .channel('glossary-changes')
     .on(
       'postgres_changes',
@@ -254,6 +282,6 @@ export function subscribeToGlossaryChanges(
     });
 
   return () => {
-    supabase.removeChannel(channel);
+    client.removeChannel(channel);
   };
 }

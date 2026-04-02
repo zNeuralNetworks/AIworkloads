@@ -1,5 +1,18 @@
+import { InfrastructureImplication } from '../types';
 
 export type Suitability = 'poor' | 'good' | 'excellent';
+
+export interface CommunicationPattern {
+  id: string;
+  title: string;
+  subtitle: string;
+  iconKey: string;
+  triggerCondition: string;
+  stressSignature: string;
+  designPosture: string;
+  operationalRisk: string;
+  runbooks: { id: string; label: string }[];
+}
 
 export interface LBMechanism {
   id: string;
@@ -24,6 +37,78 @@ export interface LBDecisionRow {
   notes: string;
 }
 
+export const COMMUNICATION_PATTERNS: CommunicationPattern[] = [
+  {
+    id: 'all-reduce',
+    title: 'All-Reduce',
+    subtitle: 'Synchronized gradient exchange',
+    iconKey: 'GitMerge',
+    triggerCondition:
+      'Distributed training jobs synchronize model state at each step or micro-batch boundary.',
+    stressSignature:
+      'Repeated east-west bursts, strong path symmetry sensitivity, and straggler amplification on the slowest rail.',
+    designPosture:
+      'Non-blocking backend, strong entropy, balanced pathing, and early congestion signaling before pause takes over.',
+    operationalRisk:
+      'Tail-latency stragglers and rail imbalance expand job completion time far faster than average utilization suggests.',
+    runbooks: [
+      { id: 'allreduce-tail-latency', label: 'High Tail Latency During All-Reduce' },
+      { id: 'ecn-instability', label: 'ECN Mark Rate Instability' },
+    ],
+  },
+  {
+    id: 'all-to-all',
+    title: 'All-to-All',
+    subtitle: 'Every participant exchanges with every other participant',
+    iconKey: 'Network',
+    triggerCondition:
+      'Mixture-of-experts, embedding exchange, and distributed shuffle phases redistribute data across many peers at once.',
+    stressSignature:
+      'High fan-out, burst receiver pressure, and broad queue occupancy growth rather than one obvious hot flow.',
+    designPosture:
+      'Wide path diversity, careful queue thresholding, and receiver-side headroom sized for burst convergence.',
+    operationalRisk:
+      'Receiver incast and uneven shard placement create throughput collapse even when the fabric looks underutilized at coarse granularity.',
+    runbooks: [
+      { id: 'incast-collapse', label: 'Throughput Collapse During Incast' },
+      { id: 'ecn-instability', label: 'ECN Mark Rate Instability' },
+    ],
+  },
+  {
+    id: 'parameter-server',
+    title: 'Parameter Server',
+    subtitle: 'Centralized aggregation or update tiers',
+    iconKey: 'Server',
+    triggerCondition:
+      'Clients or workers converge on a bounded aggregation tier that coordinates updates, state, or model partitions.',
+    stressSignature:
+      'Persistent fan-in toward a smaller receiver set, hotspot receivers, and asymmetric north-south versus east-west pressure.',
+    designPosture:
+      'Protect receiver tiers, isolate heavy update classes, and instrument hotspot nodes before tuning transport behavior.',
+    operationalRisk:
+      'A small number of overloaded receivers or cache tiers can become the real bottleneck while the broader fabric appears healthy.',
+    runbooks: [{ id: 'incast-collapse', label: 'Throughput Collapse During Incast' }],
+  },
+  {
+    id: 'moe-dispatch',
+    title: 'MoE Dispatch',
+    subtitle: 'Expert routing with skew-sensitive fan-out',
+    iconKey: 'Boxes',
+    triggerCondition:
+      'Token routing or expert dispatch sends uneven traffic to subsets of participants based on model gating decisions.',
+    stressSignature:
+      'Receiver skew, bursty expert hotspots, and fast shifts in queue occupancy as the active expert set changes.',
+    designPosture:
+      'Design for skew, not just average balance. Monitor hotspot receivers, cache-path variance, and queue volatility.',
+    operationalRisk:
+      'Expert imbalance causes localized congestion and tail amplification long before bulk utilization shows a cluster-wide problem.',
+    runbooks: [
+      { id: 'incast-collapse', label: 'Throughput Collapse During Incast' },
+      { id: 'allreduce-tail-latency', label: 'High Tail Latency During All-Reduce' },
+    ],
+  },
+];
+
 export const LB_MECHANISMS: LBMechanism[] = [
   {
     id: 'ecmp',
@@ -31,16 +116,16 @@ export const LB_MECHANISMS: LBMechanism[] = [
     subtitle: 'Equal-Cost Multi-Path',
     iconKey: 'GitMerge',
     description:
-      'The default load-distribution mechanism in AI fabrics. Hashes on packet header fields and spreads traffic across equal-cost paths. Synchronized RDMA elephant flows from AI collectives frequently collide on the same links while adjacent paths stay underused.',
+      'The baseline distribution mechanism in Ethernet fabrics. It is simple and universal, but synchronized elephant flows can collide on the same members while adjacent paths stay underused.',
     strengths: [
-      'Universal support — works on all switching ASICs',
-      'Zero configuration overhead for basic deployment',
-      'Consistent and predictable per-flow path selection',
+      'Universal support across platforms',
+      'Predictable per-flow path selection',
+      'Good enough for smaller fabrics or lower burst coordination',
     ],
     limitations: [
-      'Hash collisions cause hot-spots with coordinated elephant flows',
-      'No awareness of actual link utilization or queue depth',
-      'Ineffective when many flows share the same 5-tuple entropy',
+      'Hash collisions create hotspots with synchronized collectives',
+      'No visibility into queue depth or actual link stress',
+      'Weak fit for highly coordinated GPU cluster flows at scale',
     ],
     tier: 'Leaf + Spine',
     awareness: 'Flow Hash',
@@ -53,16 +138,16 @@ export const LB_MECHANISMS: LBMechanism[] = [
     subtitle: 'Dynamic Load Balancing',
     iconKey: 'Activity',
     description:
-      'An EOS feature that improves on static hash-based ECMP by reacting to observed flow behavior. Evaluates the queue depth and recent data-transmitted load of each ECMP member port and steers new traffic away from congested links. Deployed at the leaf layer.',
+      'DLB reacts to observed queue and load behavior on ECMP members and steers new traffic away from hotter paths. It improves burst response at the leaf but remains reactive rather than workload-semantic.',
     strengths: [
-      'Reacts to real queue depth — avoids hot-spot formation',
-      'Improves throughput during bursty AI collective operations',
-      'Can coexist with CLB on spine switches',
+      'Responds to real queue behavior',
+      'Reduces hotspot formation during bursty collectives',
+      'Pairs well with CLB at the spine layer',
     ],
     limitations: [
-      'Supported on fixed-port AI leaf platforms only',
-      'Reactive — acts after congestion begins, not before',
-      'Does not understand collective communication semantics',
+      'Acts after congestion begins',
+      'Leaf-scoped rather than end-to-end collective-aware',
+      'Platform support is narrower than baseline ECMP',
     ],
     tier: 'Leaf',
     awareness: 'Queue Depth',
@@ -75,16 +160,16 @@ export const LB_MECHANISMS: LBMechanism[] = [
     subtitle: 'Cluster Load Balancing',
     iconKey: 'Network',
     description:
-      'An EOS feature that identifies RoCEv2-based collective communication flows at the spine and allocates them to use all available leaf uplinks evenly. Unlike DLB, CLB is collective-aware — designed specifically for GPU cluster all-reduce traffic patterns. Configured on spine switches only.',
+      'CLB is collective-aware at the spine and is designed for RoCEv2 collective traffic patterns. It improves uplink distribution when synchronized cluster behavior would defeat simple hashing.',
     strengths: [
-      'Collective-aware — understands all-reduce traffic patterns',
-      'Allocates flows across all leaf uplinks at the spine',
-      'Designed specifically for GPU cluster scale',
+      'Aware of collective traffic behavior',
+      'Improves spine-level uplink utilization balance',
+      'Designed for GPU cluster scale and synchronized communication',
     ],
     limitations: [
-      'Spine-only deployment; does not replace DLB at leaves',
-      'Requires multi-agent coordination model',
-      'Limited to RoCEv2-identified collective flows',
+      'Spine-only and complementary to leaf behavior',
+      'Useful primarily where collective identification is meaningful',
+      'Does not eliminate the need for disciplined host and leaf posture',
     ],
     tier: 'Spine',
     awareness: 'Collective-Aware',
@@ -100,7 +185,7 @@ export const LB_DECISION_TABLE: LBDecisionRow[] = [
     awareness: 'Flow Hash',
     aiSuitability: 'good',
     aiSuitabilityLabel: 'Baseline',
-    notes: 'Sufficient for small clusters; hash collisions create hot-spots at AI scale',
+    notes: 'Useful starting point, but collision risk rises quickly with synchronized collectives.',
   },
   {
     mechanism: 'DLB',
@@ -108,7 +193,7 @@ export const LB_DECISION_TABLE: LBDecisionRow[] = [
     awareness: 'Queue Depth',
     aiSuitability: 'good',
     aiSuitabilityLabel: 'Good',
-    notes: 'Reduces hot-spot formation during bursty collectives; fixed-port AI leaf platforms only',
+    notes: 'Improves burst response at the leaf where hotspots first become visible.',
   },
   {
     mechanism: 'CLB',
@@ -116,7 +201,7 @@ export const LB_DECISION_TABLE: LBDecisionRow[] = [
     awareness: 'Collective-Aware',
     aiSuitability: 'excellent',
     aiSuitabilityLabel: 'Excellent',
-    notes: 'Collective-aware spine load distribution; can coexist with DLB on leaves',
+    notes: 'Best fit when collective semantics materially influence spine uplink balance.',
   },
   {
     mechanism: 'Packet Spraying',
@@ -124,6 +209,29 @@ export const LB_DECISION_TABLE: LBDecisionRow[] = [
     awareness: 'Per-Packet',
     aiSuitability: 'excellent',
     aiSuitabilityLabel: 'Excellent',
-    notes: 'Eliminates hash collision entirely; requires out-of-order tolerant transport (UET)',
+    notes: 'Eliminates hash collision, but requires transport tolerance for reordering.',
+  },
+];
+
+export const COMMUNICATION_MODULE_IMPLICATIONS: InfrastructureImplication[] = [
+  {
+    label: 'What fails first',
+    detail:
+      'Communication-pattern mismatch shows up first as hotspots, stragglers, or receiver collapse, not as a neat fabric-wide utilization increase.',
+  },
+  {
+    label: 'What to monitor first',
+    detail:
+      'Track queue occupancy volatility, ECN stability, retransmits, and path or receiver skew for the specific collective or fan-in pattern in play.',
+  },
+  {
+    label: 'What to tune first',
+    detail:
+      'Tune path distribution and congestion posture according to the communication pattern before changing platform assumptions or oversubscription targets.',
+  },
+  {
+    label: 'When to hand off',
+    detail:
+      'Once the dominant communication pattern is known, hand off to sizing and topology tools to quantify radix, lane count, and pod-scale implications.',
   },
 ];

@@ -5,7 +5,8 @@ import { Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchPalette } from '../hooks/useSearchPalette';
 import { MODULE_REGISTRY } from '../app/moduleRegistry';
-import { GLOSSARY, NAVIGATION } from '../constants';
+import { NAVIGATION } from '../constants';
+import { useData } from '../contexts/DataContext';
 
 interface SearchPaletteProps {
   palette: ReturnType<typeof useSearchPalette>;
@@ -24,6 +25,7 @@ type ResultItem =
 const SearchPalette: React.FC<SearchPaletteProps> = ({ palette }) => {
   const { isOpen, close, query, setQuery } = palette;
   const navigate = useNavigate();
+  const { glossary } = useData();
   const inputRef = useRef<HTMLInputElement>(null);
   const [focusedIndex, setFocusedIndex] = useState(0);
 
@@ -46,7 +48,7 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ palette }) => {
     });
 
   const glossaryResults: ResultItem[] = query.trim().length > 0
-    ? Object.entries(GLOSSARY)
+    ? Object.entries(glossary)
         .filter(([term, def]) =>
           term.toLowerCase().includes(query.toLowerCase()) ||
           def.toLowerCase().includes(query.toLowerCase())

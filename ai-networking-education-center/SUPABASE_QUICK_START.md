@@ -72,6 +72,11 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 ## Step 4: Initialize Data (Optional)
 
+Current app behavior note:
+- Supabase auth can be configured now.
+- Full shared persistence across every admin-editable dataset is not wired yet.
+- Runtime edits still persist locally in the browser unless broader sync wiring is added later.
+
 Load sample data into Supabase:
 
 ```bash
@@ -185,8 +190,8 @@ npm install @supabase/supabase-js @sentry/react
 1. **Test Admin Features**
    - Login with magic link
    - Edit glossary terms
-   - Verify changes sync to database
-   - Check admin_edit_log has entries
+   - Verify local runtime edits apply correctly in the browser
+   - Defer shared-dataset sync verification until the sync wiring is added
 
 2. **Monitor with Sentry** (Optional)
    - Create Sentry account: https://sentry.io
@@ -198,10 +203,10 @@ npm install @supabase/supabase-js @sentry/react
    - Push to main branch
    - GitHub Actions will build and deploy automatically
 
-4. **Enable Real-time Sync**
-   - Open `components/admin/AdminEditors.tsx` (or similar)
-   - Import `useSupabaseSync` hook
-   - Call it to enable automatic sync on edits
+4. **Plan Shared Sync Wiring**
+   - Decide which admin-editable datasets must persist to Supabase
+   - Wire `useSupabaseSync` into the authenticated admin flow
+   - Add upload and realtime coverage for every chosen dataset
 
 ## Quick Commands Reference
 
@@ -215,6 +220,7 @@ npm run analyze           # Bundle analysis
 
 # Testing
 npm run test              # Unit tests
+npx playwright install --with-deps chromium  # One-time browser install
 npm run test:e2e         # E2E tests
 npm run lint             # Code quality
 

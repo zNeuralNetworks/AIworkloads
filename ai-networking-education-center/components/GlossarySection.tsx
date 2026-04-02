@@ -20,8 +20,8 @@ const DOMAINS = [
 const DOMAIN_COLORS: Record<string, string> = {
   'Infrastructure & Topology': 'text-blue-300 border-blue-500/30 bg-blue-500/10',
   'Data Movement & Transport': 'text-purple-300 border-purple-500/30 bg-purple-500/10',
-  'Congestion & Flow Control': 'text-orange-300 border-orange-500/30 bg-orange-500/10',
-  'Platform & Silicon': 'text-cyan-300 border-cyan-500/30 bg-cyan-500/10',
+  'Congestion & Flow Control': 'text-blue-300 border-blue-500/30 bg-blue-500/10',
+  'Platform & Silicon': 'text-teal-300 border-teal-500/30 bg-teal-500/10',
   'Workload Types': 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10',
 };
 

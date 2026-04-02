@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { X, Settings } from 'lucide-react';
 import { 
   ConfigEditor, LayoutEditor, PerformanceEditor, ProtocolEditor, 
@@ -31,17 +31,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose }) => {
     comparisonTable, updateComparisonTable,
     resetToDefaults 
   } = useData();
-  
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>('config');
-
-  const handleLogin = (password: string) => {
-    if (password === (import.meta.env.VITE_ADMIN_PASSWORD ?? '19901991')) {
-      setIsAuthenticated(true);
-    } else {
-      alert('Access Denied');
-    }
-  };
+  const isAuthenticated = Boolean(user);
 
   if (!isOpen) return null;
 
@@ -57,7 +49,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h2 className="text-white font-bold text-lg">Admin Console</h2>
-              {isAuthenticated && <p className="text-xs text-slate-500">v2.1 Comprehensive CMS</p>}
+              {isAuthenticated && <p className="text-xs text-slate-500">Supabase-authenticated CMS</p>}
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-colors">
@@ -66,15 +58,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content Area */}
-        {!isAuthenticated ? (
-          <AdminLogin onLogin={handleLogin} />
+        {loading ? (
+          <div className="flex flex-1 items-center justify-center bg-[#161b22] text-sm text-slate-400">
+            Checking admin session...
+          </div>
+        ) : !isAuthenticated ? (
+          <AdminLogin />
         ) : (
           <div className="flex-1 flex overflow-hidden">
             
             <AdminSidebar 
               activeTab={activeTab} 
               setActiveTab={setActiveTab} 
-              onLogout={() => setIsAuthenticated(false)}
+              onLogout={() => void signOut()}
               onReset={resetToDefaults}
             />
 

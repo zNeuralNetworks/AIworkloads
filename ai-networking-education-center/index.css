@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-app: #0f1117;
+  --bg-surface: #161b22;
+  --bg-inset: #0d1117;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --accent-primary: #3b82f6;
+  --accent-reference: #14b8a6;
+  --accent-technical: #8b5cf6;
+  --accent-success: #10b981;
+  --accent-critical: #ef4444;
+  --accent-warning: #f59e0b;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px;
@@ -9,7 +24,7 @@ html {
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #0f1117;
+  background-color: var(--bg-app);
   color: #e2e8f0;
 }
 
@@ -20,4 +35,22 @@ body {
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@layer components {
+  .theme-section-label {
+    @apply font-mono text-xs uppercase tracking-[0.28em] text-blue-500;
+  }
+
+  .theme-chip-active {
+    @apply border border-blue-500/20 bg-blue-500/10 text-blue-300;
+  }
+
+  .theme-surface {
+    background-color: var(--bg-surface);
+  }
+
+  .theme-inset {
+    background-color: var(--bg-inset);
+  }
 }

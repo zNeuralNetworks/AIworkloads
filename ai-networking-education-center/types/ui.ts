@@ -1,5 +1,6 @@
 
 import { LucideIcon } from 'lucide-react';
+import type { DifficultyLevel, LearningScenario } from './learning';
 
 /** Navigation item in the dock/sidebar */
 export interface NavItem {
@@ -27,4 +28,12 @@ export interface HomeModule {
   href: string;
   color: string;
   colSpan?: number;
+  estimatedMinutes?: number;
+  difficulty?: DifficultyLevel;
+  whyItMatters?: string;
+  explainOutcome?: string;
+  learningObjectives?: string[];
+  prerequisiteModuleIds?: string[];
+  recommendedNextIds?: string[];
+  entryScenarios?: LearningScenario[];
 }

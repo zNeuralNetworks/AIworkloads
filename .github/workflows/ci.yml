@@ -1,50 +1,97 @@
-name: CI
+name: App CI/CD
+
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
-
-permissions:
-  contents: write
+    branches: [main, develop]
 
 jobs:
-  ci:
+  test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
     defaults:
       run:
         working-directory: ai-networking-education-center
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: ai-networking-education-center/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+      - name: Run unit tests
+        run: npm run test
+      - name: Run e2e tests
+        run: npm run test:e2e
+
+  build-docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/app/ai-networking-center:${{ github.sha }} \
+            -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/app/ai-networking-center:latest \
+            ./ai-networking-education-center
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/app/ai-networking-center:${{ github.sha }}
+          docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/app/ai-networking-center:latest
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ai-networking-center \
+            --image ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/app/ai-networking-center:${{ github.sha }} \
+            --region ${{ secrets.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --memory 512Mi \
+            --cpu 1 \
+            --timeout 60
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: npm
           cache-dependency-path: ai-networking-education-center/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
-      - run: npm run test
-      - run: npx playwright install --with-deps chromium
-      # Push to main: regenerate linux baselines and commit back (bootstraps first run,
-      # keeps baselines current so future PRs can diff against them)
-      - name: Update visual baselines
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npx playwright test --update-snapshots
-      - name: Commit updated linux visual baselines
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        working-directory: .
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ai-networking-education-center/e2e/visual.spec.ts-snapshots/
-          if git diff --staged --quiet; then
-            echo "No baseline changes to commit"
-          else
-            git commit -m "chore(e2e): update linux visual baselines [skip ci]"
-            git push
-          fi
-      # PRs: compare against committed baselines for visual regression detection
-      - name: Run e2e tests
-        if: github.event_name == 'pull_request'
-        run: npm run test:e2e
+      - name: Install dependencies
+        working-directory: ai-networking-education-center
+        run: npm ci
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          configPath: './.github/lighthouse-config.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true

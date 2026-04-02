@@ -98,6 +98,59 @@ export interface HPCItem {
   points: Array<string | SourceLinkedValue>;
 }
 
+/** Reusable "what fails / monitor / tune / handoff" style implication item */
+export interface InfrastructureImplication {
+  label: string;
+  detail: string;
+}
+
+/** Workload profile used by the Workload Types module */
+export interface WorkloadProfile {
+  id: string;
+  title: string;
+  subtitle: string;
+  iconKey: string;
+  summary: string;
+  dominantTraffic: string;
+  burstiness: string;
+  latencySensitivity: string;
+  retransmissionTolerance: string;
+  topologySensitivity: string;
+  designPosture: string;
+  operationalRisk: string;
+}
+
+/** Guided traffic-pattern teaching item used by the Workload Types module */
+export interface TrafficPatternLabItem {
+  id: string;
+  title: string;
+  summary: string;
+  visualType: 'all-reduce' | 'all-to-all' | 'parameter-server' | 'moe-dispatch' | 'checkpoint-burst';
+  dominantDirection: 'east-west' | 'north-south' | 'mixed';
+  synchronizationProfile: string;
+  congestionRisk: string;
+  topologySensitivity: string;
+  telemetry: string;
+  networkMeaning: string;
+}
+
+/** Data-movement lifecycle stage used by the Data Movement module */
+export interface DataMovementStage {
+  id: string;
+  title: string;
+  subtitle: string;
+  iconKey: string;
+  visualMode: 'ingest' | 'shuffle' | 'checkpoint' | 'restore';
+  notice: string;
+  summary: string;
+  dominantFlow: string;
+  flowSteps: string[];
+  stressSignature: string;
+  designPosture: string;
+  primarySignals: string;
+  dependsOn: string[];
+}
+
 /** Single telemetry item in an operations runbook */
 export interface RunbookTelemetryItem {
   text: string;

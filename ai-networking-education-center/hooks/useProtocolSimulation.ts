@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 interface Packet {
   id: number;
@@ -43,7 +42,7 @@ export const useProtocolSimulation = () => {
   const PACKET_SPEED = 1.5;
   const PFC_SPEED = 3;
 
-  const animate = () => {
+  const animate = useEffectEvent(() => {
     if (!isMounted.current) return;
 
     let state = simState.current;
@@ -98,7 +97,7 @@ export const useProtocolSimulation = () => {
         setUiState({ ...state });
         requestRef.current = requestAnimationFrame(animate);
     }
-  };
+  });
 
   // Game Loop Management
   useEffect(() => {

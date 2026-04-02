@@ -2,12 +2,8 @@ import React, { useState } from 'react';
 import { Lock, Mail, Chrome, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
-interface AdminLoginProps {
-  onLogin: () => void;
-}
-
-const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
-  const { signInWithMagicLink, signInWithGoogle } = useAuth();
+const AdminLogin: React.FC = () => {
+  const { signInWithMagicLink, signInWithGoogle, isConfigured } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -57,7 +53,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           <p className="text-slate-400">Sign in to edit application data</p>
         </div>
 
-        {step === 'input' && (
+        {!isConfigured && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-900/20 p-3 text-sm text-amber-200">
+            Admin authentication is unavailable until Supabase environment variables are configured.
+          </div>
+        )}
+
+        {step === 'input' && isConfigured && (
           <>
             <div className="space-y-4">
               <div>
@@ -104,7 +106,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
           </>
         )}
 
-        {step === 'sent' && (
+        {step === 'sent' && isConfigured && (
           <div className="text-center space-y-4">
             <div className="inline-block p-4 bg-green-900/30 rounded-full text-green-400 ring-1 ring-green-500/30">
               <CheckCircle size={32} />

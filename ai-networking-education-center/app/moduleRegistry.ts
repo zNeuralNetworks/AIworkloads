@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import type { ComponentType, LazyExoticComponent } from 'react';
+import type { DifficultyLevel, LearningScenario } from '../types';
 
 const ArchitectureSection = lazy(() => import('../components/ArchitectureSection'));
 const ConceptsSection = lazy(() => import('../components/ConceptsSection'));
@@ -20,6 +21,12 @@ export interface ModuleRegistryItem {
   title: string;
   /** One-line preview shown in "Next section" CTA */
   subtitle?: string;
+  estimatedMinutes?: number;
+  difficulty?: DifficultyLevel;
+  learningObjectives?: string[];
+  prerequisiteModuleIds?: string[];
+  recommendedNextIds?: string[];
+  entryScenarios?: LearningScenario[];
   order: number;
   tocVisible: boolean;
   page: 'main' | 'operations' | 'glossary' | 'deep-dive';
@@ -32,6 +39,13 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
     anchorId: 'etherlink',
     title: 'Architecture Patterns',
     subtitle: 'Reference topology patterns and design constraints by workflow behavior',
+    estimatedMinutes: 10,
+    difficulty: 'Foundation',
+    learningObjectives: [
+      'Match workflow shape to topology posture',
+      'Know when the fabric problem is architectural versus transport-level',
+    ],
+    recommendedNextIds: ['concepts'],
     order: 1,
     tocVisible: true,
     page: 'main',
@@ -42,6 +56,30 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
     anchorId: 'concepts',
     title: 'Data Movement',
     subtitle: 'RDMA, NVMe-oF, and RoCEv2 primitives that shape system data paths',
+    estimatedMinutes: 12,
+    difficulty: 'Foundation',
+    learningObjectives: [
+      'Recognize which lifecycle stage is dominant',
+      'Map transport primitives to operational pressure points',
+    ],
+    prerequisiteModuleIds: ['training-vs-inference'],
+    recommendedNextIds: ['protocols', 'load-balancing'],
+    entryScenarios: [
+      {
+        title: 'Checkpoint burst dominates',
+        prompt: 'The workload looks healthy until save windows arrive and writeback collides with job-critical traffic.',
+        dominantSignal: 'Checkpoint stage dominates the data path',
+        networkBehavior: 'Storage-coupled burst handling matters more than nominal steady-state throughput',
+        infrastructureDecision: 'Isolate checkpoint posture and validate restart determinism',
+      },
+      {
+        title: 'Job startup feels random',
+        prompt: 'Initial job startup and repartitioning create uneven latency before training stabilizes.',
+        dominantSignal: 'Shuffle behavior is stressing path balance',
+        networkBehavior: 'East-west redistribution becomes the real fabric problem',
+        infrastructureDecision: 'Treat shuffle as the congestion rehearsal for the training fabric',
+      },
+    ],
     order: 2,
     tocVisible: true,
     page: 'main',
@@ -52,6 +90,30 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
     anchorId: 'protocols',
     title: 'Transport & Congestion',
     subtitle: 'Transport and congestion-control decisions tied to workload characteristics',
+    estimatedMinutes: 15,
+    difficulty: 'Intermediate',
+    learningObjectives: [
+      'Read the ECN-to-PFC sequence correctly',
+      'Choose the first congestion-control and load-balancing questions to ask',
+    ],
+    prerequisiteModuleIds: ['concepts'],
+    recommendedNextIds: ['comparison', 'performance', 'deep-dive'],
+    entryScenarios: [
+      {
+        title: 'All-reduce straggler',
+        prompt: 'A 32-node training cluster shows periodic queue growth and step-time variance.',
+        dominantSignal: 'Synchronous collectives magnify path and queue timing errors',
+        networkBehavior: 'ECN timing and path distribution matter first',
+        infrastructureDecision: 'Tune congestion posture and balancing before adding bandwidth',
+      },
+      {
+        title: 'UET simplification claim',
+        prompt: 'A customer asks whether moving to UET removes the need for congestion design discipline.',
+        dominantSignal: 'Loss tolerance changes transport behavior, not the need for good fabric design',
+        networkBehavior: 'Path distribution and recovery still need explicit posture',
+        infrastructureDecision: 'Explain the shift in control model without overselling protocol magic',
+      },
+    ],
     order: 3,
     tocVisible: true,
     page: 'main',
@@ -91,6 +153,8 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
     anchorId: 'performance',
     title: 'Performance Implications',
     subtitle: 'Latency, throughput, and collective communication benchmarks',
+    estimatedMinutes: 10,
+    difficulty: 'Intermediate',
     order: 7,
     tocVisible: true,
     page: 'main',
@@ -120,6 +184,22 @@ export const MODULE_REGISTRY: ModuleRegistryItem[] = [
     anchorId: 'training-vs-inference',
     title: 'Workload Types',
     subtitle: 'Traffic patterns, latency targets, and design tradeoffs',
+    estimatedMinutes: 8,
+    difficulty: 'Foundation',
+    learningObjectives: [
+      'Identify the workload signature before choosing transport language',
+      'Use traffic shape to frame the rest of the design conversation',
+    ],
+    recommendedNextIds: ['concepts', 'protocols'],
+    entryScenarios: [
+      {
+        title: 'Explain the workload first',
+        prompt: 'You need to classify the environment before talking about transport or platform specifics.',
+        dominantSignal: 'Workload shape determines the pressure points',
+        networkBehavior: 'Synchronization profile changes what the network must do well',
+        infrastructureDecision: 'Start with behavior, not acronyms',
+      },
+    ],
     order: 10,
     tocVisible: true,
     page: 'main',

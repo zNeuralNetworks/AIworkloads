@@ -10,7 +10,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .pnpm-store
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
@@ -47,11 +46,6 @@ README.md
 CHANGELOG.md
 *.md
 
-# Development
-src
-vite.config.ts
-tsconfig.json
-eslint.config.js
-.prettierrc
-vitest.config.ts
-playwright.config.ts
+# Local-only files
+.claude
+.agents

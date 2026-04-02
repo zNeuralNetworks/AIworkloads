@@ -15,7 +15,7 @@ const ProtocolDeepDive: React.FC = () => {
     BUFFER_THRESHOLD 
   } = useProtocolSimulation();
 
-  const { bufferLevel, isCongested, senderPaused, packets } = uiState;
+  const { bufferLevel, senderPaused, packets } = uiState;
 
   return (
     <section id="deep-dive" className="py-24 bg-[#0F1117] border-t border-white/5 relative">

@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 import { User, Session } from '@supabase/supabase-js';
 
 export interface AuthState {
@@ -13,15 +13,19 @@ export const authService = {
    * Sign in with magic link (passwordless email auth)
    */
   async signInWithMagicLink(email: string): Promise<{ error: string | null }> {
+    if (!supabase || !isSupabaseConfigured) {
+      return { error: 'Supabase authentication is not configured for this environment' };
+    }
+
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: window.location.origin,
         },
       });
       return { error: error?.message ?? null };
-    } catch (err) {
+    } catch {
       return { error: 'Failed to send magic link' };
     }
   },
@@ -30,15 +34,19 @@ export const authService = {
    * Sign in with Google OAuth
    */
   async signInWithGoogle(): Promise<{ error: string | null }> {
+    if (!supabase || !isSupabaseConfigured) {
+      return { error: 'Supabase authentication is not configured for this environment' };
+    }
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: window.location.origin,
         },
       });
       return { error: error?.message ?? null };
-    } catch (err) {
+    } catch {
       return { error: 'Failed to sign in with Google' };
     }
   },
@@ -47,6 +55,10 @@ export const authService = {
    * Get current authenticated user
    */
   async getCurrentUser(): Promise<User | null> {
+    if (!supabase || !isSupabaseConfigured) {
+      return null;
+    }
+
     try {
       const {
         data: { user },
@@ -61,6 +73,10 @@ export const authService = {
    * Get current session
    */
   async getSession(): Promise<Session | null> {
+    if (!supabase || !isSupabaseConfigured) {
+      return null;
+    }
+
     try {
       const {
         data: { session },
@@ -75,10 +91,14 @@ export const authService = {
    * Sign out
    */
   async signOut(): Promise<{ error: string | null }> {
+    if (!supabase || !isSupabaseConfigured) {
+      return { error: null };
+    }
+
     try {
       const { error } = await supabase.auth.signOut();
       return { error: error?.message ?? null };
-    } catch (err) {
+    } catch {
       return { error: 'Failed to sign out' };
     }
   },
@@ -89,6 +109,19 @@ export const authService = {
   onAuthStateChange(
     callback: (state: AuthState) => void
   ): { unsubscribe: () => void } {
+    if (!supabase || !isSupabaseConfigured) {
+      callback({
+        user: null,
+        session: null,
+        loading: false,
+        error: null,
+      });
+
+      return {
+        unsubscribe: () => undefined,
+      };
+    }
+
     const subscription = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user ?? null;
       callback({

@@ -3,10 +3,19 @@ import { useLocation } from 'react-router-dom';
 import { MODULE_REGISTRY } from '../app/moduleRegistry';
 import { useActiveSection } from '../hooks/useActiveSection';
 import { smoothScrollTo } from '../utils/scroll';
+import { useLearning } from '../contexts/LearningContext';
+
+const DEPTH_LABELS = {
+  quick: 'Quick take',
+  how: 'How it works',
+  design: 'Design implication',
+  expert: 'Expert depth',
+} as const;
 
 const TableOfContents: React.FC = () => {
   const { pathname } = useLocation();
   const currentPage = pathname === '/operations' ? 'operations' : 'main';
+  const { selectedDepthPreference, visitedModules, practicedModules, masteredModules } = useLearning();
 
   const tocItems = MODULE_REGISTRY.filter(
     (item) => item.tocVisible && item.page === currentPage
@@ -16,7 +25,16 @@ const TableOfContents: React.FC = () => {
   const activeId = useActiveSection(navIds);
 
   return (
-    <div className="fixed right-6 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 z-40 bg-[#161b22]/50 backdrop-blur-sm p-3 rounded-2xl border border-white/5 shadow-2xl">
+    <div className="fixed right-6 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 z-40 bg-[#161b22]/70 backdrop-blur-md p-3 rounded-2xl border border-white/5 shadow-2xl">
+      <div className="rounded-xl border border-white/5 bg-[#0d1117] p-3">
+        <div className="mb-2 text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500">
+          Learner orientation
+        </div>
+        <div className="text-sm font-semibold text-white">{DEPTH_LABELS[selectedDepthPreference]}</div>
+        <div className="mt-2 text-xs leading-relaxed text-slate-500">
+          Green = mastered, blue = practiced, gray = visited.
+        </div>
+      </div>
       {tocItems.map((item) => (
         <a
           key={item.id}
@@ -32,7 +50,12 @@ const TableOfContents: React.FC = () => {
                 : 'opacity-0 translate-x-2 text-slate-500 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0'
             }`}
           >
-            {item.title}
+            <div>{item.title}</div>
+            {item.estimatedMinutes && (
+              <div className="mt-1 text-[9px] tracking-[0.16em] text-slate-500">
+                {item.estimatedMinutes} min · {item.difficulty ?? 'Guided'}
+              </div>
+            )}
           </span>
 
           {/* Dot */}
@@ -40,7 +63,13 @@ const TableOfContents: React.FC = () => {
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
               activeId === item.anchorId
                 ? 'bg-blue-500 scale-125 shadow-[0_0_10px_#3b82f6]'
-                : 'bg-slate-700 group-hover:bg-slate-500'
+                : masteredModules.includes(item.id)
+                  ? 'bg-emerald-400 group-hover:bg-emerald-300'
+                  : practicedModules.includes(item.id)
+                    ? 'bg-blue-400 group-hover:bg-blue-300'
+                    : visitedModules.includes(item.id)
+                      ? 'bg-slate-400 group-hover:bg-slate-300'
+                      : 'bg-slate-700 group-hover:bg-slate-500'
             }`}
           />
         </a>

@@ -26,7 +26,7 @@ import {
   HPCItem,
 } from '../types';
 import { usePersistedReducer } from '../hooks/usePersistedReducer';
-import { safeSetItem, safeSetItemImmediate } from '../utils/safeStorage';
+import { clearAppStorage, safeSetItem, safeSetItemImmediate } from '../utils/safeStorage';
 import { loadState } from '../utils/loadState';
 
 /**
@@ -350,7 +350,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         'Are you sure you want to reset all data to factory defaults? This cannot be undone.'
       )
     ) {
-      localStorage.clear();
+      clearAppStorage();
       safeSetItemImmediate('app_version', APP_SCHEMA_VERSION);
       window.location.reload();
     }
