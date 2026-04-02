@@ -11,7 +11,9 @@ import {
 } from 'lucide-react';
 import GlossaryTerm from './GlossaryTerm';
 import InfrastructureImplicationsPanel from './InfrastructureImplicationsPanel';
+import RunbookLinksPanel from './RunbookLinksPanel';
 import SoWhatCallout from './SoWhatCallout';
+import TelemetryWatchPanel from './TelemetryWatchPanel';
 import {
   COMMUNICATION_PATTERNS,
   LB_MECHANISMS,
@@ -19,6 +21,7 @@ import {
   COMMUNICATION_MODULE_IMPLICATIONS,
 } from '../constants/loadBalancing';
 import type { Suitability } from '../constants/loadBalancing';
+import type { RunbookReference, TelemetryWatchpoint } from '../types';
 
 const ICON_COMPONENTS: Record<string, React.FC<{ size?: number; className?: string }>> = {
   GitMerge,
@@ -46,6 +49,47 @@ const DECISION_ROW_TERMS: Record<string, boolean> = {
   CLB: true,
   'Packet Spraying': true,
 };
+
+const COMMUNICATION_TELEMETRY: TelemetryWatchpoint[] = [
+  {
+    label: 'Rail imbalance',
+    signal: 'One or a few paths stay hotter than peers during collective phases',
+    whyItMatters: 'This is often the first sign that hashing or path distribution is mismatched to the communication pattern.',
+  },
+  {
+    label: 'Receiver convergence',
+    signal: 'Destination queues build sharply while the wider fabric still looks only moderately utilized',
+    whyItMatters: 'Incast and expert skew failures are receiver problems first, not generic utilization problems.',
+  },
+  {
+    label: 'Queue volatility',
+    signal: 'Rapid queue oscillation or ECN instability during all-to-all or MoE exchange',
+    whyItMatters: 'Fast volatility tells you the pattern is outrunning the control loop under burst coordination.',
+  },
+  {
+    label: 'Pattern-specific skew',
+    signal: 'One receiver set, expert group, or aggregator tier consistently lags the rest',
+    whyItMatters: 'Main-flow path tuning should follow the skew source rather than assume a fabric-wide bottleneck.',
+  },
+];
+
+const COMMUNICATION_RUNBOOKS: RunbookReference[] = [
+  {
+    id: 'allreduce-tail-latency',
+    label: 'High Tail Latency During All-Reduce',
+    context: 'Use this when synchronized collective traffic is being stretched by a hot path or degraded rail.',
+  },
+  {
+    id: 'incast-collapse',
+    label: 'Throughput Collapse During Incast',
+    context: 'Use this when many senders converge on a small receiver set and throughput collapses under burst fan-in.',
+  },
+  {
+    id: 'ecn-instability',
+    label: 'ECN Mark Rate Instability',
+    context: 'Use this when pattern-specific bursts outrun the expected early-feedback behavior.',
+  },
+];
 
 const LoadBalancingSection: React.FC = () => {
   const [activePatternId, setActivePatternId] = useState(COMMUNICATION_PATTERNS[0]?.id ?? 'all-reduce');
@@ -158,12 +202,13 @@ const LoadBalancingSection: React.FC = () => {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {activePattern.runbooks.map((runbook) => (
-                        <span
+                        <a
                           key={`${activePattern.id}-${runbook.id}`}
+                          href={`/operations#${runbook.id}`}
                           className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
                         >
                           {runbook.label}
-                        </span>
+                        </a>
                       ))}
                     </div>
                   </div>
@@ -330,6 +375,22 @@ const LoadBalancingSection: React.FC = () => {
 
         <div className="mb-20">
           <InfrastructureImplicationsPanel items={COMMUNICATION_MODULE_IMPLICATIONS} />
+        </div>
+
+        <div className="mb-20">
+          <TelemetryWatchPanel
+            title="Pattern validation telemetry"
+            intro="These watchpoints help prove whether the communication pattern diagnosis is correct before mechanism selection turns into trial-and-error tuning."
+            items={COMMUNICATION_TELEMETRY}
+          />
+        </div>
+
+        <div className="mb-20">
+          <RunbookLinksPanel
+            title="If the pattern turns into a production problem"
+            intro="These operational bridges connect communication-pattern diagnosis to the first incident workflows worth opening."
+            items={COMMUNICATION_RUNBOOKS}
+          />
         </div>
 
         <SoWhatCallout body="Do not tune the fabric because you have ECMP, DLB, or CLB available. Tune it because you know whether the workload is creating synchronized collectives, broad fan-out, receiver convergence, or skew-sensitive expert dispatch, and the control loop matches that behavior." />

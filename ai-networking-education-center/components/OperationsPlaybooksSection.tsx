@@ -112,7 +112,7 @@ const OperationsPlaybooksSection: React.FC = () => {
           {sortedRunbooks.map((book) => {
             const isExpanded = expandedIds.has(book.id);
             return (
-              <article key={book.id} className="bg-[#161b22] border border-white/5 rounded-2xl overflow-hidden">
+              <article id={book.id} key={book.id} className="bg-[#161b22] border border-white/5 rounded-2xl overflow-hidden">
                 {/* Quick-reference header — always visible */}
                 <button
                   onClick={() => toggleExpanded(book.id)}

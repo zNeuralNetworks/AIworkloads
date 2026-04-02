@@ -2,14 +2,18 @@
 import React from 'react';
 import { useData } from '../contexts/DataContext';
 import {
+  ARCHITECTURE_PATTERN_REFERENCES,
+  ARCHITECTURE_TELEMETRY_WATCHPOINTS,
   ICON_MAP,
   PLANNER_HANDOFF_LABEL,
   PLANNER_HANDOFF_STANDARD_TEXT,
   TOPOLOGY_SELECTION,
+  VENDOR_NEUTRAL_ARCHITECTURE_LENS,
 } from '../constants';
 import { Layers, Server, GitMerge, ArrowRight, ChevronRight } from 'lucide-react';
 import GlossaryTerm from './GlossaryTerm';
 import SourceBadge from './SourceBadge';
+import TelemetryWatchPanel from './TelemetryWatchPanel';
 import { claimText, hasSourceMetadata } from '../utils/sourceClaims';
 
 const ArchitectureSection: React.FC = () => {
@@ -60,6 +64,23 @@ const ArchitectureSection: React.FC = () => {
         {/* Topology Selection Decision Tree */}
         <div className="mb-24">
           <div className="mb-10">
+            <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Vendor-neutral architecture lens</div>
+            <h3 className="text-2xl font-bold text-white mb-3">Principles that apply before platform selection</h3>
+            <p className="text-slate-400 max-w-3xl text-sm">
+              Use these principles to anchor the architecture conversation in workload behavior and operational outcomes before you move into platform-specific implementation depth.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3 mb-14">
+            {VENDOR_NEUTRAL_ARCHITECTURE_LENS.map((item) => (
+              <div key={item.title} className="rounded-2xl border border-white/5 bg-[#161b22] p-6">
+                <div className="text-xs font-mono uppercase tracking-[0.18em] text-blue-400 mb-3">Principle</div>
+                <h4 className="text-lg font-bold text-white mb-3">{item.title}</h4>
+                <p className="text-sm leading-relaxed text-slate-400">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mb-10">
             <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Architecture Implications</div>
             <h3 className="text-2xl font-bold text-white mb-3">Topology Pattern Guide</h3>
             <p className="text-slate-400 max-w-2xl text-sm">
@@ -83,6 +104,42 @@ const ArchitectureSection: React.FC = () => {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="mb-24">
+          <div className="mb-10">
+            <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Standardized pattern reference</div>
+            <h3 className="text-2xl font-bold text-white mb-3">Compare architecture postures as tradeoffs, not just diagrams</h3>
+            <p className="text-slate-400 max-w-3xl text-sm">
+              These reference patterns standardize the decision conversation around workload fit, tradeoffs, migration constraints, and what you need to validate operationally.
+            </p>
+          </div>
+          <div className="grid gap-6 xl:grid-cols-3">
+            {ARCHITECTURE_PATTERN_REFERENCES.map((pattern) => (
+              <div key={pattern.id} className="rounded-2xl border border-white/5 bg-[#161b22] p-6">
+                <div className="mb-2 text-xs font-mono uppercase tracking-[0.18em] text-blue-400">Pattern</div>
+                <h4 className="text-xl font-bold text-white mb-4">{pattern.title}</h4>
+                <div className="space-y-4 text-sm">
+                  <PatternField label="Best-fit workload" value={pattern.bestFitWorkload} />
+                  <PatternField label="Topology posture" value={pattern.topologyPosture} />
+                  <PatternField label="Operational complexity" value={pattern.operationalComplexity} />
+                  <PatternField label="Migration constraint" value={pattern.migrationConstraints} />
+                  <PatternList label="Strengths" items={pattern.strengths} tone="emerald" />
+                  <PatternList label="Tradeoffs" items={pattern.tradeoffs} tone="amber" />
+                  <PatternList label="Telemetry watchpoints" items={pattern.telemetryWatchpoints} tone="cyan" />
+                  <PatternField label="When to hand off" value={pattern.plannerTrigger} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-24">
+          <TelemetryWatchPanel
+            title="Validate the architecture with the right telemetry"
+            intro="A topology choice is only credible if the workload can prove it in counters and timing behavior. These watchpoints make architecture validation operational rather than rhetorical."
+            items={ARCHITECTURE_TELEMETRY_WATCHPOINTS}
+          />
         </div>
 
         {/* Visual: The Traffic Shift */}
@@ -237,3 +294,29 @@ const ArchitectureSection: React.FC = () => {
 };
 
 export default ArchitectureSection;
+
+const PatternField: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div>
+    <div className="mb-1 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">{label}</div>
+    <p className="leading-relaxed text-slate-300">{value}</p>
+  </div>
+);
+
+const PatternList: React.FC<{ label: string; items: string[]; tone: 'emerald' | 'amber' | 'cyan' }> = ({ label, items, tone }) => {
+  const toneClass =
+    tone === 'emerald' ? 'text-emerald-300' : tone === 'amber' ? 'text-amber-300' : 'text-cyan-300';
+
+  return (
+    <div>
+      <div className={`mb-2 text-[11px] font-mono uppercase tracking-[0.18em] ${toneClass}`}>{label}</div>
+      <ul className="space-y-2">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2 text-slate-300">
+            <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${tone === 'emerald' ? 'bg-emerald-400' : tone === 'amber' ? 'bg-amber-400' : 'bg-cyan-400'}`} />
+            <span className="leading-relaxed">{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};

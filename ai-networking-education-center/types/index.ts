@@ -16,6 +16,7 @@ export type {
   ComparisonRow,
   ProtocolMechanism, ProtocolConcept,
   InfrastructureImplication, WorkloadProfile, DataMovementStage,
+  TelemetryWatchpoint, RunbookReference, ArchitecturePatternReference,
   TrafficPatternLabItem,
   HPCItem, ValidationTest, ValidationPhase,
   TopologyBranch,

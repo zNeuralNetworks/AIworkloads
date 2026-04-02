@@ -19,9 +19,11 @@ import DepthPreferenceTabs from './DepthPreferenceTabs';
 import ScenarioDecisionCards from './ScenarioDecisionCards';
 import KnowledgeCheckCard from './KnowledgeCheckCard';
 import InfrastructureImplicationsPanel from './InfrastructureImplicationsPanel';
+import RunbookLinksPanel from './RunbookLinksPanel';
 import SoWhatCallout from './SoWhatCallout';
+import TelemetryWatchPanel from './TelemetryWatchPanel';
 import { useLearning } from '../contexts/LearningContext';
-import type { InfrastructureImplication, KnowledgeCheck, LearningScenario } from '../types';
+import type { InfrastructureImplication, KnowledgeCheck, LearningScenario, RunbookReference, TelemetryWatchpoint } from '../types';
 
 const protocolColor = (color: string) => {
   if (color === 'blue') return { tab: 'bg-blue-600', badge: 'bg-blue-900/30 text-blue-400', icon: 'bg-blue-500/10 text-blue-400' };
@@ -94,6 +96,47 @@ const PROTOCOL_MODULE_IMPLICATIONS: InfrastructureImplication[] = [
   {
     label: 'What to explain clearly',
     detail: 'Protocol choice changes the control model, but it does not remove the need for path discipline, telemetry, and workload-aware congestion posture.',
+  },
+];
+
+const PROTOCOL_TELEMETRY: TelemetryWatchpoint[] = [
+  {
+    label: 'ECN before pause',
+    signal: 'ECN marks appear and stabilize before sustained PFC growth',
+    whyItMatters: 'This is the quickest indicator that the congestion loop is leading instead of reacting late.',
+  },
+  {
+    label: 'Pause containment',
+    signal: 'Pause remains brief and localized rather than spreading across unrelated links',
+    whyItMatters: 'Sustained or spreading pause means the fabric is using link-level rescue as a primary control mode.',
+  },
+  {
+    label: 'Endpoint reaction',
+    signal: 'CNP and sender-rate reduction counters move in step with marked congestion',
+    whyItMatters: 'If the host reaction lags, switch-side tuning alone will not fix the control loop.',
+  },
+  {
+    label: 'Hotspot geometry',
+    signal: 'Queue depth and retransmit behavior align with a specific path, rail, or receiver set',
+    whyItMatters: 'The useful question is where the loop breaks first, not whether the whole fabric looks busy.',
+  },
+];
+
+const PROTOCOL_RUNBOOKS: RunbookReference[] = [
+  {
+    id: 'ecn-instability',
+    label: 'ECN Mark Rate Instability',
+    context: 'Use this when ECN is absent, constant, or clearly arriving too late for the workload burst pattern.',
+  },
+  {
+    id: 'pfc-storm',
+    label: 'PFC Storm / Head-of-Line Blocking',
+    context: 'Use this when pause containment fails and lossless behavior turns into broad collateral damage.',
+  },
+  {
+    id: 'allreduce-tail-latency',
+    label: 'High Tail Latency During All-Reduce',
+    context: 'Use this when synchronized training shows variance and a likely slow rail or path is stretching the collective.',
   },
 ];
 
@@ -733,6 +776,22 @@ const ProtocolsSection: React.FC = () => {
             />
           </div>
         )}
+
+        <div className="mb-16">
+          <TelemetryWatchPanel
+            title="Congestion telemetry baseline"
+            intro="These watchpoints turn transport discussion into observable behavior. If these signals are missing, the design conversation is still too abstract."
+            items={PROTOCOL_TELEMETRY}
+          />
+        </div>
+
+        <div className="mb-16">
+          <RunbookLinksPanel
+            title="Operational follow-through"
+            intro="When transport and congestion posture turn into an incident, these runbooks are the next useful operational paths."
+            items={PROTOCOL_RUNBOOKS}
+          />
+        </div>
 
         <div className="mb-16">
           <KnowledgeCheckCard check={PROTOCOL_CHECK} moduleId="protocols" />

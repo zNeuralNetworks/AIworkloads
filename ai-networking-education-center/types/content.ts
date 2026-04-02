@@ -104,6 +104,34 @@ export interface InfrastructureImplication {
   detail: string;
 }
 
+/** Reusable telemetry watchpoint card */
+export interface TelemetryWatchpoint {
+  label: string;
+  signal: string;
+  whyItMatters: string;
+}
+
+/** Runbook reference used to bridge main-flow modules into operations */
+export interface RunbookReference {
+  id: string;
+  label: string;
+  context: string;
+}
+
+/** Standardized architecture pattern card */
+export interface ArchitecturePatternReference {
+  id: string;
+  title: string;
+  bestFitWorkload: string;
+  topologyPosture: string;
+  strengths: string[];
+  tradeoffs: string[];
+  operationalComplexity: string;
+  migrationConstraints: string;
+  telemetryWatchpoints: string[];
+  plannerTrigger: string;
+}
+
 /** Workload profile used by the Workload Types module */
 export interface WorkloadProfile {
   id: string;

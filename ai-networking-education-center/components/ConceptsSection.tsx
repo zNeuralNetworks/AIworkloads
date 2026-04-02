@@ -36,8 +36,10 @@ import { CONCEPTS_SECTION_CONTENT } from '../content/concepts';
 import DepthPreferenceTabs from './DepthPreferenceTabs';
 import ScenarioDecisionCards from './ScenarioDecisionCards';
 import KnowledgeCheckCard from './KnowledgeCheckCard';
+import RunbookLinksPanel from './RunbookLinksPanel';
+import TelemetryWatchPanel from './TelemetryWatchPanel';
 import { useLearning } from '../contexts/LearningContext';
-import type { KnowledgeCheck, LearningScenario } from '../types';
+import type { KnowledgeCheck, LearningScenario, RunbookReference, TelemetryWatchpoint } from '../types';
 
 const FALLBACK_ICONS = {
   ArrowDownToLine,
@@ -127,6 +129,47 @@ const DATA_MOVEMENT_CHECK: KnowledgeCheck = {
     },
   ],
 };
+
+const DATA_MOVEMENT_TELEMETRY: TelemetryWatchpoint[] = [
+  {
+    label: 'Ingest readiness',
+    signal: 'First-batch delay, gateway uplink load, and loader idle time',
+    whyItMatters: 'Startup instability usually appears here before collective metrics tell you anything useful.',
+  },
+  {
+    label: 'Shuffle health',
+    signal: 'Queue occupancy volatility, ECN mark instability, and startup redistribution latency',
+    whyItMatters: 'Shuffle is often the first rehearsal for the congestion posture that later breaks collectives.',
+  },
+  {
+    label: 'Checkpoint isolation',
+    signal: 'Checkpoint duration, storage uplink saturation, and queue growth during save windows',
+    whyItMatters: 'Checkpoint and writeback collisions reveal whether storage is really isolated from job-critical traffic.',
+  },
+  {
+    label: 'Restart determinism',
+    signal: 'Time-to-first-batch after restore and queue behavior during recovery bursts',
+    whyItMatters: 'Recovery quality is part of the architecture, not just an operational afterthought.',
+  },
+];
+
+const DATA_MOVEMENT_RUNBOOKS: RunbookReference[] = [
+  {
+    id: 'incast-collapse',
+    label: 'Throughput Collapse During Incast',
+    context: 'Use this when shuffle, checkpoint, or fan-in stages collapse throughput at the receiver edge.',
+  },
+  {
+    id: 'ecn-instability',
+    label: 'ECN Mark Rate Instability',
+    context: 'Use this when stage transitions consistently reach pause or tail-drop behavior before early feedback is visible.',
+  },
+  {
+    id: 'pfc-storm',
+    label: 'PFC Storm / Head-of-Line Blocking',
+    context: 'Use this when burst containment fails and pause spreads beyond the stage that originally created pressure.',
+  },
+];
 
 const ConceptsSection: React.FC = () => {
   const { coreConcepts } = useData();
@@ -537,6 +580,22 @@ const ConceptsSection: React.FC = () => {
 
         <div className="mb-20">
           <InfrastructureImplicationsPanel items={DATA_MOVEMENT_MODULE_IMPLICATIONS} />
+        </div>
+
+        <div className="mb-20">
+          <TelemetryWatchPanel
+            title="Stage validation telemetry"
+            intro="Use these watchpoints to confirm which lifecycle stage is actually under pressure before you start changing transports or platform assumptions."
+            items={DATA_MOVEMENT_TELEMETRY}
+          />
+        </div>
+
+        <div className="mb-20">
+          <RunbookLinksPanel
+            title="If this becomes an incident, go here next"
+            intro="These runbooks connect stage-level reference guidance to the first operational investigation paths."
+            items={DATA_MOVEMENT_RUNBOOKS}
+          />
         </div>
 
         <div className="mb-20">
