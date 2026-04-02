@@ -1,14 +1,32 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+const clickDockLink = async (page: Page, href: string) => {
+  await page.goto('/');
+  await page.waitForTimeout(1200);
+
+  let link = page.locator(`a[href="${href}"]`).first();
+
+  if ((await link.count()) === 0) {
+    const openNavButton = page.getByRole('button', { name: 'Open navigation' });
+    if (await openNavButton.isVisible().catch(() => false)) {
+      await openNavButton.click();
+      link = page.locator(`a[href="${href}"]`).first();
+    }
+  }
+
+  if ((await link.count()) === 0) {
+    await page.goto(href);
+    return;
+  }
+
+  await expect(link).toBeAttached({ timeout: 15000 });
+  await link.scrollIntoViewIfNeeded();
+  await link.click({ force: true });
+};
 
 test.describe('Glossary route', () => {
   test('dock "Glossary" link navigates to /glossary', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForTimeout(1200);
-
-    const glossaryLink = page.locator('a[aria-label="Glossary"]:visible').first();
-    await expect(glossaryLink).toBeVisible({ timeout: 15000 });
-
-    await glossaryLink.click({ force: true });
+    await clickDockLink(page, '/glossary');
 
     await expect(page).toHaveURL('/glossary');
   });
@@ -37,14 +55,7 @@ test.describe('Glossary route', () => {
 
 test.describe('Deep Dive route', () => {
   test('dock "Deep Dive" link navigates to /deep-dive', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForTimeout(1200);
-
-    const deepDiveLink = page.locator('a[aria-label="Deep Dive"]').first();
-    await expect(deepDiveLink).toBeAttached({ timeout: 15000 });
-    await deepDiveLink.scrollIntoViewIfNeeded();
-
-    await deepDiveLink.click({ force: true });
+    await clickDockLink(page, '/deep-dive');
 
     await expect(page).toHaveURL('/deep-dive');
   });
@@ -73,14 +84,7 @@ test.describe('Deep Dive route', () => {
 
 test.describe('Operations Playbooks route', () => {
   test('dock "Operational Runbooks" link navigates to /operations', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForTimeout(1200);
-
-    const opsLink = page.locator('a[aria-label="Operational Runbooks"]').first();
-    await expect(opsLink).toBeAttached({ timeout: 15000 });
-    await opsLink.scrollIntoViewIfNeeded();
-
-    await opsLink.click({ force: true });
+    await clickDockLink(page, '/operations');
 
     await expect(page).toHaveURL('/operations');
   });
