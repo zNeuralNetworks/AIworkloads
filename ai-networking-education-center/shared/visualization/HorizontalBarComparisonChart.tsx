@@ -1,14 +1,4 @@
 import React from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
 
 interface HorizontalBarComparisonChartProps {
   data: Array<{ name: string; fill: string; [key: string]: string | number }>;
@@ -17,31 +7,7 @@ interface HorizontalBarComparisonChartProps {
   xDomain?: [number, number];
 }
 
-interface TooltipPayloadItem {
-  value?: number | string;
-}
-
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: TooltipPayloadItem[];
-  label?: string;
-  unit: string;
-}
-
-const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label, unit }) => {
-  if (active && payload && payload.length > 0) {
-    return (
-      <div className="bg-[#1e293b] border border-slate-700 p-3 rounded shadow-2xl">
-        <p className="text-slate-200 font-mono text-xs mb-1">{label}</p>
-        <p className="text-blue-400 font-bold font-mono">
-          {payload[0]?.value} {unit}
-        </p>
-      </div>
-    );
-  }
-
-  return null;
-};
+const formatValue = (value: number, unit: string) => `${value}${unit}`;
 
 const HorizontalBarComparisonChart: React.FC<HorizontalBarComparisonChartProps> = ({
   data,
@@ -49,35 +15,58 @@ const HorizontalBarComparisonChart: React.FC<HorizontalBarComparisonChartProps> 
   valueUnit,
   xDomain,
 }) => {
+  const numericValues = data
+    .map((entry) => entry[dataKey])
+    .filter((value): value is number => typeof value === 'number');
+
+  const domainMax = xDomain?.[1] ?? Math.max(...numericValues, 1);
+  const tickCount = 5;
+  const ticks = Array.from({ length: tickCount }, (_, index) => {
+    const value = Math.round((domainMax / (tickCount - 1)) * index);
+    return value;
+  });
+
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} layout="vertical" margin={{ left: 0, right: 30 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} horizontal={false} />
-        <XAxis
-          type="number"
-          domain={xDomain}
-          stroke="#475569"
-          fontSize={10}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis
-          dataKey="name"
-          type="category"
-          stroke="#94a3b8"
-          width={110}
-          tick={{ fontSize: 11, fill: '#94a3b8' }}
-          tickLine={false}
-          axisLine={false}
-        />
-        <Tooltip content={<CustomTooltip unit={valueUnit} />} cursor={{ fill: '#ffffff', opacity: 0.05 }} />
-        <Bar dataKey={dataKey} radius={[0, 4, 4, 0]} barSize={24}>
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.fill} />
+    <div className="flex h-full flex-col justify-between gap-5">
+      <div className="grid grid-cols-[120px_minmax(0,1fr)_72px] items-center gap-x-4 gap-y-4">
+        {data.map((entry) => {
+          const rawValue = entry[dataKey];
+          const value = typeof rawValue === 'number' ? rawValue : Number(rawValue) || 0;
+          const widthPercent = Math.max(0, Math.min(100, (value / domainMax) * 100));
+
+          return (
+            <React.Fragment key={`${entry.name}-${dataKey}`}>
+              <div className="text-right text-xs font-medium text-slate-300">
+                {entry.name}
+              </div>
+              <div className="relative h-7 overflow-hidden rounded-full border border-white/10 bg-[#0d1117]">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ease-out"
+                  style={{
+                    width: `${widthPercent}%`,
+                    minWidth: value > 0 ? '0.75rem' : 0,
+                    background: `linear-gradient(90deg, ${entry.fill}CC 0%, ${entry.fill} 100%)`,
+                    boxShadow: `0 0 18px ${entry.fill}33`,
+                  }}
+                  title={formatValue(value, valueUnit)}
+                />
+              </div>
+              <div className="text-right font-mono text-xs text-slate-400">
+                {formatValue(value, valueUnit)}
+              </div>
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      <div className="pl-[136px] pr-[72px]">
+        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.16em] text-slate-500">
+          {ticks.map((tick) => (
+            <span key={tick}>{formatValue(tick, valueUnit)}</span>
           ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
   );
 };
 

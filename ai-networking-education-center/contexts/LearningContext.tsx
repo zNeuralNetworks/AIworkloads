@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { LearningDepth, LearningState } from '../types';
 import { loadState } from '../utils/loadState';
 import { safeSetItem } from '../utils/safeStorage';
@@ -39,19 +39,34 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     safeSetItem(LEARNING_STATE_KEY, JSON.stringify(state));
   }, [state]);
 
-  const markVisited = (moduleId: string) => {
-    setState((prev) => ({ ...prev, visitedModules: unique([...prev.visitedModules, moduleId]) }));
-  };
+  const markVisited = useCallback((moduleId: string) => {
+    setState((prev) => {
+      if (prev.visitedModules.includes(moduleId)) {
+        return prev;
+      }
 
-  const markPracticed = (moduleId: string) => {
-    setState((prev) => ({
-      ...prev,
-      practicedModules: unique([...prev.practicedModules, moduleId]),
-      visitedModules: unique([...prev.visitedModules, moduleId]),
-    }));
-  };
+      return { ...prev, visitedModules: unique([...prev.visitedModules, moduleId]) };
+    });
+  }, []);
 
-  const toggleMastered = (moduleId: string) => {
+  const markPracticed = useCallback((moduleId: string) => {
+    setState((prev) => {
+      const alreadyPracticed = prev.practicedModules.includes(moduleId);
+      const alreadyVisited = prev.visitedModules.includes(moduleId);
+
+      if (alreadyPracticed && alreadyVisited) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        practicedModules: unique([...prev.practicedModules, moduleId]),
+        visitedModules: unique([...prev.visitedModules, moduleId]),
+      };
+    });
+  }, []);
+
+  const toggleMastered = useCallback((moduleId: string) => {
     setState((prev) => {
       const isMastered = prev.masteredModules.includes(moduleId);
       return {
@@ -61,50 +76,74 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           : unique([...prev.masteredModules, moduleId]),
       };
     });
-  };
+  }, []);
 
-  const completeCheck = (checkId: string, optionId: string, moduleId?: string) => {
+  const completeCheck = useCallback((checkId: string, optionId: string, moduleId?: string) => {
     setState((prev) => ({
       ...prev,
       completedChecks: { ...prev.completedChecks, [checkId]: optionId },
       practicedModules: moduleId ? unique([...prev.practicedModules, moduleId]) : prev.practicedModules,
       visitedModules: moduleId ? unique([...prev.visitedModules, moduleId]) : prev.visitedModules,
     }));
-  };
+  }, []);
 
-  const toggleBookmarkedConcept = (conceptId: string) => {
+  const toggleBookmarkedConcept = useCallback((conceptId: string) => {
     setState((prev) => ({
       ...prev,
       bookmarkedConcepts: prev.bookmarkedConcepts.includes(conceptId)
         ? prev.bookmarkedConcepts.filter((id) => id !== conceptId)
         : unique([...prev.bookmarkedConcepts, conceptId]),
     }));
-  };
+  }, []);
 
-  const setDepthPreference = (depth: LearningDepth) => {
-    setState((prev) => ({ ...prev, selectedDepthPreference: depth }));
-  };
+  const setDepthPreference = useCallback((depth: LearningDepth) => {
+    setState((prev) => {
+      if (prev.selectedDepthPreference === depth) {
+        return prev;
+      }
 
-  const setConfidence = (moduleId: string, confidence: number) => {
-    setState((prev) => ({
-      ...prev,
-      selfRatedConfidence: { ...prev.selfRatedConfidence, [moduleId]: confidence },
-    }));
-  };
+      return { ...prev, selectedDepthPreference: depth };
+    });
+  }, []);
+
+  const setConfidence = useCallback((moduleId: string, confidence: number) => {
+    setState((prev) => {
+      if (prev.selfRatedConfidence[moduleId] === confidence) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        selfRatedConfidence: { ...prev.selfRatedConfidence, [moduleId]: confidence },
+      };
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      ...state,
+      markVisited,
+      markPracticed,
+      toggleMastered,
+      completeCheck,
+      toggleBookmarkedConcept,
+      setDepthPreference,
+      setConfidence,
+    }),
+    [
+      state,
+      markVisited,
+      markPracticed,
+      toggleMastered,
+      completeCheck,
+      toggleBookmarkedConcept,
+      setDepthPreference,
+      setConfidence,
+    ]
+  );
 
   return (
-    <LearningContext.Provider
-      value={{
-        ...state,
-        markVisited,
-        markPracticed,
-        toggleMastered,
-        completeCheck,
-        toggleBookmarkedConcept,
-        setDepthPreference,
-        setConfidence,
-      }}
-    >
+    <LearningContext.Provider value={value}>
       {children}
     </LearningContext.Provider>
   );
