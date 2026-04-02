@@ -18,7 +18,8 @@ export default defineConfig({
   webServer: {
     command: 'vite --port 3001',
     url: 'http://localhost:3001',
-    reuseExistingServer: false,
+    // Reuse local dev server when present; CI still starts a fresh server.
+    reuseExistingServer: !process.env.CI,
     timeout: 30000,
   },
 });

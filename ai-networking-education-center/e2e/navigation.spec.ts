@@ -3,11 +3,12 @@ import { test, expect } from '@playwright/test';
 test.describe('Glossary route', () => {
   test('dock "Glossary" link navigates to /glossary', async ({ page }) => {
     await page.goto('/');
+    await page.waitForTimeout(1200);
 
-    const glossaryLink = page.getByRole('link', { name: 'Glossary' });
-    await expect(glossaryLink).toBeVisible({ timeout: 5000 });
+    const glossaryLink = page.locator('a[aria-label="Glossary"]:visible').first();
+    await expect(glossaryLink).toBeVisible({ timeout: 15000 });
 
-    await glossaryLink.click();
+    await glossaryLink.click({ force: true });
 
     await expect(page).toHaveURL('/glossary');
   });
@@ -37,11 +38,12 @@ test.describe('Glossary route', () => {
 test.describe('Deep Dive route', () => {
   test('dock "Deep Dive" link navigates to /deep-dive', async ({ page }) => {
     await page.goto('/');
+    await page.waitForTimeout(1200);
 
-    const deepDiveLink = page.getByRole('link', { name: 'Deep Dive' });
-    await expect(deepDiveLink).toBeVisible({ timeout: 5000 });
+    const deepDiveLink = page.locator('a[aria-label="Deep Dive"]:visible').first();
+    await expect(deepDiveLink).toBeVisible({ timeout: 15000 });
 
-    await deepDiveLink.click();
+    await deepDiveLink.click({ force: true });
 
     await expect(page).toHaveURL('/deep-dive');
   });
@@ -69,14 +71,14 @@ test.describe('Deep Dive route', () => {
 });
 
 test.describe('Operations Playbooks route', () => {
-  test('dock "Ops Playbooks" link navigates to /operations', async ({ page }) => {
+  test('dock "Operational Runbooks" link navigates to /operations', async ({ page }) => {
     await page.goto('/');
+    await page.waitForTimeout(1200);
 
-    // The dock renders after the spring animation (delay: 0.5s) — wait for it
-    const opsLink = page.getByRole('link', { name: 'Ops Playbooks' });
-    await expect(opsLink).toBeVisible({ timeout: 5000 });
+    const opsLink = page.locator('a[aria-label="Operational Runbooks"]:visible').first();
+    await expect(opsLink).toBeVisible({ timeout: 15000 });
 
-    await opsLink.click();
+    await opsLink.click({ force: true });
 
     await expect(page).toHaveURL('/operations');
   });

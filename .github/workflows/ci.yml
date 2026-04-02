@@ -35,12 +35,12 @@ jobs:
       - name: Run unit tests
         run: npm run test
       - name: Run e2e tests
-        run: npm run test:e2e
+        run: npm run test:e2e:ci
 
   build-docker:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.GCP_PROJECT_ID != '' && secrets.GCP_SERVICE_ACCOUNT_KEY != ''
     permissions:
       contents: read
       id-token: write
