@@ -1,4 +1,8 @@
-import type { ArchitecturePatternReference, TelemetryWatchpoint } from '../types';
+import type {
+  ArchitecturePatternReference,
+  DecisionSimulatorPrompt,
+  TelemetryWatchpoint,
+} from '../types';
 
 export const VENDOR_NEUTRAL_ARCHITECTURE_LENS = [
   {
@@ -98,5 +102,45 @@ export const ARCHITECTURE_TELEMETRY_WATCHPOINTS: TelemetryWatchpoint[] = [
     label: 'Expansion health',
     signal: 'Pod or plane additions do not create new hotspot boundaries or disproportionate tail growth',
     whyItMatters: 'Growth posture is part of architecture quality, not a separate future concern.',
+  },
+];
+
+export const ARCHITECTURE_DECISION_PROMPTS: DecisionSimulatorPrompt[] = [
+  {
+    id: 'synchronization',
+    title: 'Synchronization profile',
+    prompt: 'What kind of coordination pressure dominates the workload?',
+    options: [
+      { id: 'barrier', label: 'Barrier-driven', description: 'Synchronized collectives and step-time sensitivity dominate.' },
+      { id: 'mixed', label: 'Mixed-stage', description: 'Checkpoint, shuffle, and storage transitions matter alongside collectives.' },
+      { id: 'uncertain', label: 'Still emerging', description: 'The exact workload mix is not yet stable enough to optimize around one pattern.' },
+    ],
+  },
+  {
+    id: 'storageCoupling',
+    title: 'Storage coupling',
+    prompt: 'How much do checkpoint, restore, or data staging drive the fabric conversation?',
+    options: [
+      { id: 'low', label: 'Low', description: 'Storage is present but not the main architectural pressure point.' },
+      { id: 'high', label: 'High', description: 'Checkpoint, restore, or ingest behavior is a first-class design event.' },
+    ],
+  },
+  {
+    id: 'scaleCertainty',
+    title: 'Scale certainty',
+    prompt: 'How stable is the cluster-scale assumption?',
+    options: [
+      { id: 'fixed', label: 'Mostly known', description: 'The target cluster size and topology horizon are fairly clear.' },
+      { id: 'growing', label: 'Still moving', description: 'Pod count, planes, or overall scale are expected to evolve materially.' },
+    ],
+  },
+  {
+    id: 'tailSensitivity',
+    title: 'Tail-latency sensitivity',
+    prompt: 'How costly are stragglers, variance, or uneven rails?',
+    options: [
+      { id: 'strict', label: 'Strict', description: 'One slow path or rail materially harms job time or recovery posture.' },
+      { id: 'moderate', label: 'Moderate', description: 'Consistency matters, but phased optimization is acceptable.' },
+    ],
   },
 ];

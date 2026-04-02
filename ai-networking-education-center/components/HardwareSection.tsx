@@ -1,10 +1,15 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { useData } from '../contexts/DataContext';
 import { ChevronRight, Info, Server, ExternalLink } from 'lucide-react';
-import { ICON_MAP } from '../constants';
+import { ICON_MAP, PLANNER_HANDOFF_LABEL, PLANNER_HANDOFF_STANDARD_TEXT } from '../constants';
 import GlossaryTerm from './GlossaryTerm';
+import InfrastructureImplicationsPanel from './InfrastructureImplicationsPanel';
+import RunbookLinksPanel from './RunbookLinksPanel';
+import SoWhatCallout from './SoWhatCallout';
 import SourceBadge from './SourceBadge';
+import TelemetryWatchPanel from './TelemetryWatchPanel';
 import { claimText, hasSourceMetadata } from '../utils/sourceClaims';
+import type { InfrastructureImplication, RunbookReference, TelemetryWatchpoint } from '../types';
 
 // Helper component to parse text and auto-wrap known glossary terms
 // This ensures that even dynamic content from the admin panel gets tooltips.
@@ -108,6 +113,124 @@ const PRODUCT_TIPS: Record<string, ProductTip> = {
   },
 };
 
+const PLATFORM_DECISION_CONTENT: Record<
+  string,
+  {
+    bestFit: string;
+    tradeoffs: string[];
+    operationalConsequence: string;
+    whatLeadsHere: string;
+    telemetry: TelemetryWatchpoint[];
+    runbooks: RunbookReference[];
+  }
+> = {
+  '7060X': {
+    bestFit: 'High-radix fixed fabrics where dense 800G connectivity and low-latency collective posture matter more than deep-buffer absorption.',
+    tradeoffs: [
+      'Excellent when collective symmetry is the main architecture requirement',
+      'Less forgiving when receiver convergence or storage bursts dominate',
+      'Rewards disciplined pathing more than it forgives queue mistakes',
+    ],
+    operationalConsequence: 'The platform works best when the architecture is already clean. If congestion posture is weak, the fabric will show it quickly.',
+    whatLeadsHere: 'Choose this when synchronized collectives dominate and the main question is dense non-blocking connectivity rather than deep queue headroom.',
+    telemetry: [
+      { label: 'Rail balance', signal: 'Slowest rail, path spread, and collective tail latency', whyItMatters: 'These prove whether the fixed high-radix backend is really delivering symmetry.' },
+      { label: 'Queue discipline', signal: 'ECN-to-PFC sequence under burst coordination', whyItMatters: 'This tells you whether the platform is being used with the right congestion posture.' },
+    ],
+    runbooks: [
+      { id: 'allreduce-tail-latency', label: 'High Tail Latency During All-Reduce', context: 'Use this when the fixed backend is still being stretched by one hot rail or path.' },
+      { id: 'ecn-instability', label: 'ECN Mark Rate Instability', context: 'Use this when pathing is acceptable but the feedback loop is still wrong.' },
+    ],
+  },
+  '7800R': {
+    bestFit: 'Large-scale modular spines where VOQ fairness, deep buffers, and expansion discipline matter more than a purely fixed-form-factor story.',
+    tradeoffs: [
+      'Stronger fit for convergent pressure and modular scale growth',
+      'Operationally heavier than a fixed spine story',
+      'Best when fairness under burst fan-in is architecturally important',
+    ],
+    operationalConsequence: 'This shifts the decision from simple port density to queue fairness, scale boundaries, and modular operational discipline.',
+    whatLeadsHere: 'Choose this when large-scale spine growth, receiver convergence, or modular fairness is the real architecture constraint.',
+    telemetry: [
+      { label: 'Receiver fairness', signal: 'Destination-facing queue growth stays bounded under fan-in', whyItMatters: 'This proves whether VOQ and deeper buffering are solving the intended problem.' },
+      { label: 'Growth posture', signal: 'Expansion or modular growth does not create new hot boundaries', whyItMatters: 'A modular spine is only valuable if it scales cleanly.' },
+    ],
+    runbooks: [
+      { id: 'incast-collapse', label: 'Throughput Collapse During Incast', context: 'Use this when deep-buffer and VOQ assumptions are not actually protecting convergent workloads.' },
+      { id: 'allreduce-tail-latency', label: 'High Tail Latency During All-Reduce', context: 'Use this when scale is large but one path or linecard domain still stretches completion.' },
+    ],
+  },
+  '7700R': {
+    bestFit: 'Very large environments where single-hop simplification and distributed scale are more valuable than preserving a conventional staged topology.',
+    tradeoffs: [
+      'Powerful scale simplification story at very large size',
+      'A different operational model than conventional Clos growth',
+      'Best when scale really justifies the topology shift',
+    ],
+    operationalConsequence: 'This changes the topology conversation itself. The main risk is adopting the distributed model before the scale and workload assumptions truly require it.',
+    whatLeadsHere: 'Choose this when the architecture problem is now topology simplification at massive scale, not just adding more stages to a smaller fabric.',
+    telemetry: [
+      { label: 'Global consistency', signal: 'Cluster-wide tail behavior stays bounded instead of moving the bottleneck elsewhere', whyItMatters: 'The single-hop story only matters if it removes rather than relocates the problem.' },
+      { label: 'Failure-domain behavior', signal: 'Large-scale disruption remains bounded during fault or maintenance events', whyItMatters: 'Topology simplification must still preserve predictable resilience.' },
+    ],
+    runbooks: [
+      { id: 'allreduce-tail-latency', label: 'High Tail Latency During All-Reduce', context: 'Use this when distributed scale still leaves a global hot path or straggler domain.' },
+      { id: 'ecn-instability', label: 'ECN Mark Rate Instability', context: 'Use this when topology is right but the control loop is still wrong.' },
+    ],
+  },
+  '7280R3': {
+    bestFit: 'Storage-heavy or convergent environments where deep buffering and VOQ matter more than pure radix density.',
+    tradeoffs: [
+      'Excellent for storage bursts and receiver convergence',
+      'Not the default answer for every collective-heavy backend',
+      'Deep buffers help only when the workload really needs them',
+    ],
+    operationalConsequence: 'The main value is surviving storage and microburst behavior. The main risk is using deep buffers as a substitute for disciplined architecture everywhere else.',
+    whatLeadsHere: 'Choose this when checkpoint, storage, or convergent fan-in is the dominant operational risk.',
+    telemetry: [
+      { label: 'Burst absorption', signal: 'Checkpoint and ingest pressure stay bounded instead of spreading pause or HOL blocking', whyItMatters: 'This validates the reason for choosing a deeper-buffer platform.' },
+      { label: 'Queue fairness', signal: 'Convergent receivers remain stable under burst fan-in', whyItMatters: 'This shows whether the platform is protecting the right boundary.' },
+    ],
+    runbooks: [
+      { id: 'incast-collapse', label: 'Throughput Collapse During Incast', context: 'Use this when storage or fan-in pressure still collapses throughput.' },
+      { id: 'pfc-storm', label: 'PFC Storm / Head-of-Line Blocking', context: 'Use this when deep buffers still allow pause or HOL spread.' },
+    ],
+  },
+  '7280R3A': {
+    bestFit: 'Microburst-sensitive environments where in-band visibility is part of the architecture requirement, not just a nice extra.',
+    tradeoffs: [
+      'Better observability into burst and queue behavior',
+      'Still requires disciplined interpretation of the telemetry',
+      'Best when diagnosis speed is part of the value proposition',
+    ],
+    operationalConsequence: 'The platform helps only if the team turns that visibility into faster and better tuning decisions rather than collecting more counters.',
+    whatLeadsHere: 'Choose this when the architecture question includes how to observe burst behavior clearly enough to keep up with tuning and incident response.',
+    telemetry: [
+      { label: 'Burst localization', signal: 'Per-hop queue and timing metadata isolate the hotspot quickly', whyItMatters: 'This proves the observability value is real rather than theoretical.' },
+      { label: 'Lifecycle clarity', signal: 'Writeback and recovery paths can be separated cleanly in telemetry', whyItMatters: 'This helps distinguish which workload stage is actually dominating.' },
+    ],
+    runbooks: [
+      { id: 'incast-collapse', label: 'Throughput Collapse During Incast', context: 'Use this when telemetry makes the receiver-convergence problem obvious.' },
+      { id: 'ecn-instability', label: 'ECN Mark Rate Instability', context: 'Use this when visibility shows the feedback loop is arriving too late.' },
+    ],
+  },
+};
+
+const PLATFORM_IMPLICATIONS: InfrastructureImplication[] = [
+  {
+    label: 'What leads you here',
+    detail: 'Choose the platform after the workload, traffic geometry, and failure signature are clear. Do not start with a SKU and work backward into architecture.',
+  },
+  {
+    label: 'What to tune first',
+    detail: 'Tune pathing, queue boundaries, and failure-domain assumptions before escalating to a bigger or more specialized platform story.',
+  },
+  {
+    label: 'When to hand off',
+    detail: 'Once the platform posture is clear, use planner tooling for the quantitative BOM, optics, and exact tier-count decision.',
+  },
+];
+
 const HardwareSection: React.FC = () => {
   const { products } = useData();
   const [activeProduct, setActiveProduct] = useState(products[0]);
@@ -138,21 +261,56 @@ const HardwareSection: React.FC = () => {
 
   const ProductIcon = ICON_MAP[activeProduct.iconKey] || Server;
   const tip = PRODUCT_TIPS[activeProduct.id];
+  const platformDecision = PLATFORM_DECISION_CONTENT[activeProduct.id] || PLATFORM_DECISION_CONTENT['7060X'];
 
   return (
     <section id="hardware" className="py-32 bg-[#0F1117] border-t border-white/5">
       <div className="container mx-auto px-6">
         <div className="mb-16">
           <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">
-            Module 06
+            Domain · Platform Considerations
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-            Platform Specifications
+            Platform Considerations
           </h2>
           <p className="text-slate-400 max-w-2xl text-lg">
-            Hardware designed for high-<GlossaryTerm term="Radix">radix</GlossaryTerm> connectivity
-            and <GlossaryTerm term="Deep Buffers">deep buffering</GlossaryTerm>.
+            Platform choice follows workload behavior. This module explains when radix, deep buffers, VOQ, modular scale, and observability become the next real architecture question.
           </p>
+        </div>
+
+        <div className="mb-12 grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+          <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
+            <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-blue-400">
+              Why This Matters
+            </div>
+            <h3 className="mb-4 text-2xl font-bold text-white">Platform follows workload posture</h3>
+            <p className="mb-5 text-sm leading-relaxed text-slate-300">
+              The right question is not which switch sounds best in isolation. The right question is what workload behavior makes radix, buffering, modularity, or optics efficiency the next meaningful constraint.
+            </p>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-100">
+              <div className="mb-1 font-semibold">Common mistake</div>
+              Teams compare platforms like brochures instead of translating the workload and failure signature into a platform tradeoff.
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-[#161b22] p-5">
+              <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-300">When deep buffers matter</div>
+              <p className="text-sm leading-relaxed text-slate-300">When storage bursts, fan-in, and checkpoint convergence dominate the failure signature.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-[#161b22] p-5">
+              <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-300">When high radix matters</div>
+              <p className="text-sm leading-relaxed text-slate-300">When synchronized collectives and dense non-blocking connectivity are the primary architectural requirement.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-[#161b22] p-5">
+              <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-300">When modular scale matters</div>
+              <p className="text-sm leading-relaxed text-slate-300">When spine growth, fairness under scale, or expansion constraints are the dominant architecture problem.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-[#161b22] p-5">
+              <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-cyan-300">What should lead you here</div>
+              <p className="text-sm leading-relaxed text-slate-300">A concrete workload or failure signature, not generic curiosity about product families.</p>
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 min-h-[600px]">
@@ -224,7 +382,7 @@ const HardwareSection: React.FC = () => {
                   )}
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
                 {activeProduct.specs.map((spec, i) => (
                   <div
                     key={i}
@@ -235,6 +393,30 @@ const HardwareSection: React.FC = () => {
                     {hasSourceMetadata(spec) && <SourceBadge claim={spec} />}
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="mb-8 grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+              <div className="rounded-2xl border border-white/5 bg-[#0d1117] p-5">
+                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-blue-300">
+                  Best fit
+                </div>
+                <p className="text-sm leading-relaxed text-slate-300">{platformDecision.bestFit}</p>
+                <div className="mt-4 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
+                  What leads you here
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">{platformDecision.whatLeadsHere}</p>
+              </div>
+
+              <div className="rounded-2xl border border-white/5 bg-[#0d1117] p-5">
+                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-amber-300">
+                  Operational consequence
+                </div>
+                <p className="text-sm leading-relaxed text-slate-300">{platformDecision.operationalConsequence}</p>
+                <div className="mt-4 text-[11px] font-mono uppercase tracking-[0.18em] text-blue-300">
+                  {PLANNER_HANDOFF_LABEL}
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">{PLANNER_HANDOFF_STANDARD_TEXT}</p>
               </div>
             </div>
 
@@ -413,8 +595,55 @@ const HardwareSection: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            <div className="mt-10 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+              <div className="rounded-2xl border border-white/5 bg-[#0d1117] p-5">
+                <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-amber-300">
+                  Tradeoffs
+                </div>
+                <ul className="space-y-2">
+                  {platformDecision.tradeoffs.map((item) => (
+                    <li key={item} className="flex gap-2 text-sm text-slate-300">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border border-white/5 bg-[#0d1117] p-5">
+                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
+                  What this platform should prove
+                </div>
+                <p className="text-sm leading-relaxed text-slate-300">
+                  The chosen platform should reduce the dominant workload risk, not just improve a spec sheet. If it does not change the actual failure signature, the architecture story is still incomplete.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
+
+        <div className="mt-12 mb-12">
+          <TelemetryWatchPanel
+            title="Platform validation telemetry"
+            intro="These watchpoints follow the active platform because different platform choices are supposed to solve different architecture problems."
+            items={platformDecision.telemetry}
+          />
+        </div>
+
+        <div className="mb-12">
+          <RunbookLinksPanel
+            title="If the platform story turns into an incident"
+            intro="These are the first operational paths to open when the selected platform still is not behaving as intended."
+            items={platformDecision.runbooks}
+          />
+        </div>
+
+        <div className="mb-12">
+          <InfrastructureImplicationsPanel items={PLATFORM_IMPLICATIONS} />
+        </div>
+
+        <SoWhatCallout body="Do not choose a platform because one series sounds stronger in isolation. Choose it because the workload and failure signature prove that radix, deep buffering, modularity, or observability are the next real architecture constraint." />
       </div>
     </section>
   );

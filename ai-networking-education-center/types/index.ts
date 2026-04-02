@@ -6,6 +6,10 @@ export type {
   LearningScenario,
   KnowledgeCheck,
   KnowledgeCheckOption,
+  DecisionSimulatorOption,
+  DecisionSimulatorPrompt,
+  DecisionSimulatorResult,
+  DecisionSimulatorScenario,
   LearningState,
 } from './learning';
 export type {

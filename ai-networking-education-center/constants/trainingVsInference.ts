@@ -1,4 +1,9 @@
-import { InfrastructureImplication, TrafficPatternLabItem, WorkloadProfile } from '../types';
+import {
+  DecisionSimulatorPrompt,
+  InfrastructureImplication,
+  TrafficPatternLabItem,
+  WorkloadProfile,
+} from '../types';
 import { PLANNER_HANDOFF_DESTINATION } from './plannerHandoff';
 
 export interface WorkloadDecisionRow {
@@ -251,5 +256,48 @@ export const WORKLOAD_MODULE_IMPLICATIONS: InfrastructureImplication[] = [
     label: 'When to hand off',
     detail:
       `Once the workload profile and failure mode are clear, move to ${PLANNER_HANDOFF_DESTINATION} for quantitative implementation outputs such as topology scale, node and NIC counts, fabric tiers, and optics.`,
+  },
+];
+
+export const WORKLOAD_DECISION_PROMPTS: DecisionSimulatorPrompt[] = [
+  {
+    id: 'synchronizationIntensity',
+    title: 'Synchronization intensity',
+    prompt: 'How tightly coordinated is the workload?',
+    options: [
+      { id: 'high', label: 'High', description: 'Barrier-driven exchange or strong collective timing dominates.' },
+      { id: 'medium', label: 'Mixed', description: 'Some synchronization exists, but stage transitions and storage matter too.' },
+      { id: 'low', label: 'Loose', description: 'Throughput or request distribution matters more than strict barriers.' },
+    ],
+  },
+  {
+    id: 'latencySensitivity',
+    title: 'Latency sensitivity',
+    prompt: 'What kind of latency behavior matters most?',
+    options: [
+      { id: 'tail', label: 'Tail / jitter', description: 'P99 or straggler variance directly harms the outcome.' },
+      { id: 'balanced', label: 'Balanced', description: 'Consistency matters, but throughput and recovery are also first-class concerns.' },
+      { id: 'throughput', label: 'Bulk throughput', description: 'Single-request latency matters less than steady aggregate progress.' },
+    ],
+  },
+  {
+    id: 'storageCoupling',
+    title: 'Storage / recovery coupling',
+    prompt: 'How much do checkpoint, restore, or staging paths change the design?',
+    options: [
+      { id: 'high', label: 'High', description: 'Checkpoint, restore, or staging behavior is operationally decisive.' },
+      { id: 'moderate', label: 'Moderate', description: 'Storage is present, but not the only architectural driver.' },
+      { id: 'low', label: 'Low', description: 'The dominant question is not storage-coupled lifecycle behavior.' },
+    ],
+  },
+  {
+    id: 'objective',
+    title: 'Primary objective',
+    prompt: 'What is the workload trying to preserve first?',
+    options: [
+      { id: 'completion', label: 'Job completion', description: 'Distributed progress and step-time consistency come first.' },
+      { id: 'response', label: 'Response time', description: 'Serving latency and jitter dominate the design.' },
+      { id: 'throughput', label: 'Aggregate throughput', description: 'Bulk completion and queue drain behavior matter most.' },
+    ],
   },
 ];

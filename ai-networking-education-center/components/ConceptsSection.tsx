@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import {
+  DATA_MOVEMENT_DECISION_PROMPTS,
   DATA_MOVEMENT_DECISION_NOTES,
   DATA_MOVEMENT_MODULE_IMPLICATIONS,
   DATA_MOVEMENT_STAGES,
@@ -33,13 +34,19 @@ import GlossaryTerm from './GlossaryTerm';
 import SourceBadge from './SourceBadge';
 import { claimText, hasSourceMetadata } from '../utils/sourceClaims';
 import { CONCEPTS_SECTION_CONTENT } from '../content/concepts';
+import DecisionSimulator from './DecisionSimulator';
 import DepthPreferenceTabs from './DepthPreferenceTabs';
 import ScenarioDecisionCards from './ScenarioDecisionCards';
 import KnowledgeCheckCard from './KnowledgeCheckCard';
 import RunbookLinksPanel from './RunbookLinksPanel';
 import TelemetryWatchPanel from './TelemetryWatchPanel';
 import { useLearning } from '../contexts/LearningContext';
-import type { KnowledgeCheck, LearningScenario, RunbookReference, TelemetryWatchpoint } from '../types';
+import type {
+  DecisionSimulatorResult,
+  KnowledgeCheck,
+  LearningScenario,
+  RunbookReference,
+} from '../types';
 
 const FALLBACK_ICONS = {
   ArrowDownToLine,
@@ -130,29 +137,6 @@ const DATA_MOVEMENT_CHECK: KnowledgeCheck = {
   ],
 };
 
-const DATA_MOVEMENT_TELEMETRY: TelemetryWatchpoint[] = [
-  {
-    label: 'Ingest readiness',
-    signal: 'First-batch delay, gateway uplink load, and loader idle time',
-    whyItMatters: 'Startup instability usually appears here before collective metrics tell you anything useful.',
-  },
-  {
-    label: 'Shuffle health',
-    signal: 'Queue occupancy volatility, ECN mark instability, and startup redistribution latency',
-    whyItMatters: 'Shuffle is often the first rehearsal for the congestion posture that later breaks collectives.',
-  },
-  {
-    label: 'Checkpoint isolation',
-    signal: 'Checkpoint duration, storage uplink saturation, and queue growth during save windows',
-    whyItMatters: 'Checkpoint and writeback collisions reveal whether storage is really isolated from job-critical traffic.',
-  },
-  {
-    label: 'Restart determinism',
-    signal: 'Time-to-first-batch after restore and queue behavior during recovery bursts',
-    whyItMatters: 'Recovery quality is part of the architecture, not just an operational afterthought.',
-  },
-];
-
 const DATA_MOVEMENT_RUNBOOKS: RunbookReference[] = [
   {
     id: 'incast-collapse',
@@ -171,11 +155,64 @@ const DATA_MOVEMENT_RUNBOOKS: RunbookReference[] = [
   },
 ];
 
+const STAGE_RUNBOOKS: Record<string, RunbookReference[]> = {
+  ingest: [
+    DATA_MOVEMENT_RUNBOOKS[1],
+    DATA_MOVEMENT_RUNBOOKS[0],
+  ],
+  shuffle: [
+    DATA_MOVEMENT_RUNBOOKS[0],
+    DATA_MOVEMENT_RUNBOOKS[1],
+  ],
+  checkpoint: [
+    DATA_MOVEMENT_RUNBOOKS[0],
+    DATA_MOVEMENT_RUNBOOKS[2],
+  ],
+  restore: [
+    DATA_MOVEMENT_RUNBOOKS[2],
+    DATA_MOVEMENT_RUNBOOKS[0],
+  ],
+};
+
+const ENVIRONMENT_MODIFIER_GUIDANCE: Record<
+  string,
+  { summary: string; whyItFits: string; plannerTrigger: string; misconception: string }
+> = {
+  'storage-coupled': {
+    summary: 'Storage behavior is part of the fabric event, not a backend detail.',
+    whyItFits: 'Prioritize storage-path isolation, queue boundaries, and deterministic write or read behavior before debating transport branding.',
+    plannerTrigger: 'Move to the planner when storage isolation, tier count, or path separation becomes a quantitative implementation question.',
+    misconception: 'Do not say “the network is fine, storage is separate.” If the stage pressure is storage-coupled, that is already a fabric architecture decision.',
+  },
+  'synchronized-training': {
+    summary: 'Collective timing pressure sits immediately downstream of this stage.',
+    whyItFits: 'Treat this stage as a rehearsal for the training fabric. Weak symmetry or weak early feedback here will reappear harder during collectives.',
+    plannerTrigger: 'Move to the planner when rail count, plane count, or non-blocking assumptions are the remaining unknowns.',
+    misconception: 'Do not isolate the stage from the collective phase. If training follows immediately, stage-local instability becomes job-time instability.',
+  },
+  'mixed-scientific': {
+    summary: 'Multiple lifecycle modes share the same backend and compete for policy headroom.',
+    whyItFits: 'Bias toward explicit boundaries, predictable transitions, and telemetry that differentiates one workflow mode from another.',
+    plannerTrigger: 'Move to the planner when mixed-workflow segmentation or shared-tier capacity becomes the next design constraint.',
+    misconception: 'Do not optimize for one clean benchmark path. Mixed scientific environments usually fail at transitions, not at the average case.',
+  },
+  'recovery-heavy': {
+    summary: 'Restart quality matters nearly as much as steady-state job speed.',
+    whyItFits: 'Optimize for bounded recovery time, checkpoint locality, and queue behavior under degraded conditions rather than only peak throughput.',
+    plannerTrigger: 'Move to the planner when restart-domain sizing, storage fan-out, or failure-domain isolation becomes the real question.',
+    misconception: 'Do not treat restart as a rare exception. In preemptible or failure-prone environments, recovery posture is core architecture.',
+  },
+};
+
 const ConceptsSection: React.FC = () => {
   const { coreConcepts } = useData();
   const { selectedDepthPreference, setDepthPreference, markVisited, toggleMastered, masteredModules } = useLearning();
-  const concepts = coreConcepts || [];
-  const [activeStageId, setActiveStageId] = useState(DATA_MOVEMENT_STAGES[0]?.id ?? 'ingest');
+  const concepts = useMemo(() => coreConcepts || [], [coreConcepts]);
+  const [selectedSimulatorValues, setSelectedSimulatorValues] = useState<Record<string, string>>({
+    stageCondition: DATA_MOVEMENT_STAGES[0]?.id ?? 'ingest',
+    environmentModifier: 'storage-coupled',
+  });
+  const [manualStageId, setManualStageId] = useState<string | null>(null);
   const [refreshersOpen, setRefreshersOpen] = useState(false);
   const [expandedRefreshers, setExpandedRefreshers] = useState<Set<string>>(new Set());
 
@@ -184,8 +221,11 @@ const ConceptsSection: React.FC = () => {
   }, [markVisited]);
 
   const activeStage = useMemo(
-    () => DATA_MOVEMENT_STAGES.find((stage) => stage.id === activeStageId) || DATA_MOVEMENT_STAGES[0],
-    [activeStageId]
+    () =>
+      DATA_MOVEMENT_STAGES.find(
+        (stage) => stage.id === (manualStageId ?? selectedSimulatorValues.stageCondition)
+      ) || DATA_MOVEMENT_STAGES[0],
+    [manualStageId, selectedSimulatorValues.stageCondition]
   );
 
   const supportingPrimitiveIds = Array.from(new Set(DATA_MOVEMENT_STAGES.flatMap((stage) => stage.dependsOn)));
@@ -196,6 +236,46 @@ const ConceptsSection: React.FC = () => {
     selectedDepthPreference === 'design' || selectedDepthPreference === 'expert';
   const showExpertDepth = selectedDepthPreference === 'expert';
   const isMastered = masteredModules.includes('concepts');
+
+  const dataMovementResults = useMemo<DecisionSimulatorResult[]>(() => {
+    const modifier = ENVIRONMENT_MODIFIER_GUIDANCE[selectedSimulatorValues.environmentModifier];
+
+    return DATA_MOVEMENT_STAGES.map((stage) => {
+      const telemetry = stage.primarySignals.split(',').map((signal) => signal.trim()).filter(Boolean);
+      return {
+        id: stage.id,
+        title: stage.title,
+        summary: `${stage.summary} ${modifier.summary}`,
+        recommendedPosture: stage.title,
+        whyItFits: `${stage.designPosture} ${modifier.whyItFits}`,
+        whatFailsFirst: stage.stressSignature,
+        tradeoffs: [
+          `Dominant flow: ${stage.dominantFlow}`,
+          `Lifecycle sequence: ${stage.flowSteps.join(' -> ')}`,
+          `Key primitive set: ${stage.dependsOn.map((dependency) => conceptById(concepts, dependency)?.title || dependencyLabel(dependency)).join(', ')}`,
+        ],
+        telemetry: telemetry.map((signal, index) => ({
+          label: index === 0 ? 'Inspect first' : `Signal ${index + 1}`,
+          signal,
+          whyItMatters: `This signal tells you whether ${stage.title.toLowerCase()} is the real pressure stage before you generalize to protocol or platform conclusions.`,
+        })),
+        runbookLinks: STAGE_RUNBOOKS[stage.id] || DATA_MOVEMENT_RUNBOOKS,
+        plannerTrigger: modifier.plannerTrigger,
+        misconception: modifier.misconception,
+        diagramMode: stage.id,
+      };
+    });
+  }, [concepts, selectedSimulatorValues.environmentModifier]);
+
+  const activeDataMovementResult =
+    dataMovementResults.find((result) => result.id === activeStage.id) || dataMovementResults[0];
+
+  const handleSimulatorChange = (promptId: string, optionId: string) => {
+    setSelectedSimulatorValues((prev) => ({ ...prev, [promptId]: optionId }));
+    if (promptId === 'stageCondition') {
+      setManualStageId(null);
+    }
+  };
 
   const toggleRefresher = (id: string) => {
     setExpandedRefreshers((prev) => {
@@ -300,156 +380,53 @@ const ConceptsSection: React.FC = () => {
             Lifecycle Stages
           </div>
           <h3 className="mb-8 text-2xl font-bold text-white">
-            Keep the lifecycle visible, then inspect the stage that matters
+            Keep the lifecycle visible, then drive it with the stage that matters
           </h3>
         </div>
 
-        <div className="mb-10 grid gap-4 xl:grid-cols-4">
-          {DATA_MOVEMENT_STAGES.map((stage) => {
-            const isActive = stage.id === activeStage.id;
-            const Icon =
-              ICON_MAP[stage.iconKey] ||
-              FALLBACK_ICONS[stage.iconKey as keyof typeof FALLBACK_ICONS] ||
-              Database;
-
-            return (
-              <button
-                key={stage.id}
-                onClick={() => setActiveStageId(stage.id)}
-                className={`rounded-2xl border p-5 text-left transition-all ${
-                  isActive
-                    ? 'border-blue-500/30 bg-blue-500/10 shadow-[0_0_0_1px_rgba(59,130,246,0.1)]'
-                    : 'border-white/5 bg-[#161b22] hover:border-white/15'
-                }`}
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div
-                    className={`rounded-xl p-3 ${
-                      isActive ? 'bg-blue-500/15 text-blue-300' : 'bg-white/5 text-slate-400'
-                    }`}
-                  >
-                    <Icon size={18} />
-                  </div>
-                  <span
-                    className={`rounded-full border px-2.5 py-1 text-[11px] font-mono uppercase tracking-[0.18em] ${
-                      isActive
-                        ? 'border-blue-500/20 bg-blue-500/10 text-blue-300'
-                        : 'border-white/10 bg-white/5 text-slate-500'
-                    }`}
-                  >
-                    {stage.dominantFlow}
-                  </span>
-                </div>
-                <h4 className="mb-1 text-lg font-bold text-white">{stage.title}</h4>
-                <p
-                  className={`mb-3 text-[11px] font-mono uppercase tracking-[0.18em] ${
-                    isActive ? 'text-blue-300' : 'text-slate-500'
-                  }`}
-                >
-                  {stage.subtitle}
-                </p>
-                <p className="text-sm leading-relaxed text-slate-400">{stage.summary}</p>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mb-20 grid gap-6 xl:grid-cols-[1.3fr_0.95fr]">
-          <div className="rounded-2xl border border-white/5 bg-[#161b22] p-6 md:p-8">
-            <div className="mb-5 flex items-center justify-between gap-4">
+        <div className="mb-20">
+          <DecisionSimulator
+            title="Choose the stage pressure, then see the infrastructure consequence"
+            intro="This simulator keeps the lifecycle model visible while you change the stage and environment context. Use it to diagnose which phase is really creating the network question before you reach for protocol labels."
+            prompts={DATA_MOVEMENT_DECISION_PROMPTS}
+            selectedValues={selectedSimulatorValues}
+            onChange={handleSimulatorChange}
+            results={dataMovementResults}
+            activeResult={activeDataMovementResult}
+            onSelectResult={setManualStageId}
+            renderVisual={(result) => (
               <div>
-                <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-blue-500">
-                  Stage Learning Canvas
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-blue-400">Stage learning canvas</div>
+                  <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-mono uppercase tracking-[0.18em] text-blue-300">
+                    {activeStage.subtitle}
+                  </div>
                 </div>
-                <h3 className="text-2xl font-bold text-white">{activeStage.title}</h3>
+                <StageVisual
+                  stage={DATA_MOVEMENT_STAGES.find((stage) => stage.id === result.id) || activeStage}
+                />
               </div>
-              <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-mono uppercase tracking-[0.18em] text-blue-300">
-                {activeStage.subtitle}
+            )}
+          >
+            <div className="rounded-2xl border border-white/5 bg-[#111827] p-5">
+              <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
+                Which primitives matter
               </div>
+              <div className="flex flex-wrap gap-2">
+                {activeStage.dependsOn.map((dependency) => (
+                  <span
+                    key={`${activeStage.id}-${dependency}`}
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
+                  >
+                    {conceptById(concepts, dependency)?.title || dependencyLabel(dependency)}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                Use the stage to decide which transport or storage primitive matters. Do not start with the acronym and work backward.
+              </p>
             </div>
-
-            <div className="mb-6 rounded-2xl border border-white/5 bg-[#0d1117] p-6">
-              <StageVisual stage={activeStage} />
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-              <InterpretationRail
-                label="Failure / Pressure"
-                accent="amber"
-                summary={activeStage.stressSignature}
-                items={activeStage.flowSteps}
-              />
-              <InterpretationRail
-                label="Operational Meaning"
-                accent="cyan"
-                summary={activeStage.designPosture}
-                items={[activeStage.summary, `Dominant flow: ${activeStage.dominantFlow}`]}
-              />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/5 bg-[#161b22] p-6 md:p-8">
-            <div className="mb-4 text-xs font-mono uppercase tracking-[0.22em] text-blue-500">
-              Interpretation
-            </div>
-
-            <div className="space-y-4">
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  Dominant Flow
-                </div>
-                <p className="text-sm leading-relaxed text-slate-300">{activeStage.dominantFlow}</p>
-              </div>
-
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  What to watch
-                </div>
-                <TelemetryRibbon signals={activeStage.primarySignals} />
-              </div>
-
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  Which primitives matter
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {activeStage.dependsOn.map((dependency) => (
-                    <span
-                      key={`${activeStage.id}-${dependency}`}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
-                    >
-                      {conceptById(concepts, dependency)?.title || dependencyLabel(dependency)}
-                    </span>
-                  ))}
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                  Use the lifecycle stage to decide which protocol or transport behavior matters. Do
-                  not start with the acronym and work backward.
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  Where this leads next
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {['Communication Patterns', 'Transport & Congestion', 'Foundational Refreshers'].map((item) => (
-                    <span
-                      key={item}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                  After you understand the active stage, move to congestion behavior and pathing
-                  choices. Use the protocol refresher only when you need to reconnect the lifecycle
-                  to RDMA, RoCEv2, or NVMe semantics.
-                </p>
-              </div>
-            </div>
-          </div>
+          </DecisionSimulator>
         </div>
 
         {(showExpertDepth || refreshersOpen) && (
@@ -585,16 +562,16 @@ const ConceptsSection: React.FC = () => {
         <div className="mb-20">
           <TelemetryWatchPanel
             title="Stage validation telemetry"
-            intro="Use these watchpoints to confirm which lifecycle stage is actually under pressure before you start changing transports or platform assumptions."
-            items={DATA_MOVEMENT_TELEMETRY}
+            intro="These watchpoints now follow the active simulator result so the stage diagnosis and telemetry posture stay connected."
+            items={activeDataMovementResult.telemetry}
           />
         </div>
 
         <div className="mb-20">
           <RunbookLinksPanel
             title="If this becomes an incident, go here next"
-            intro="These runbooks connect stage-level reference guidance to the first operational investigation paths."
-            items={DATA_MOVEMENT_RUNBOOKS}
+            intro="These runbooks now follow the active stage diagnosis instead of staying generic."
+            items={activeDataMovementResult.runbookLinks || DATA_MOVEMENT_RUNBOOKS}
           />
         </div>
 
@@ -982,45 +959,6 @@ const LegendItem: React.FC<{
       <span className={`h-2.5 w-2.5 rounded-full ${toneClass}`} />
       {label}
     </span>
-  );
-};
-
-const InterpretationRail: React.FC<{
-  label: string;
-  summary: string;
-  items: string[];
-  accent: 'amber' | 'cyan';
-}> = ({ label, summary, items, accent }) => {
-  const styles =
-    accent === 'amber'
-      ? {
-          border: 'border-amber-500/20',
-          bg: 'bg-amber-500/10',
-          heading: 'text-amber-300',
-          bullet: 'bg-amber-400',
-        }
-      : {
-          border: 'border-blue-500/20',
-          bg: 'bg-blue-500/10',
-          heading: 'text-blue-300',
-          bullet: 'bg-blue-400',
-        };
-
-  return (
-    <div className={`rounded-xl border p-5 ${styles.border} ${styles.bg}`}>
-      <div className={`mb-3 text-[11px] font-mono uppercase tracking-[0.18em] ${styles.heading}`}>
-        {label}
-      </div>
-      <p className="mb-4 text-sm leading-relaxed text-slate-200">{summary}</p>
-      <ul className="space-y-2">
-        {items.map((item) => (
-          <li key={`${label}-${item}`} className="flex items-start gap-3 text-sm text-slate-300">
-            <span className={`mt-1.5 h-1.5 w-1.5 rounded-full ${styles.bullet}`} />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 };
 

@@ -49,7 +49,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h2 className="text-white font-bold text-lg">Admin Console</h2>
-              {isAuthenticated && <p className="text-xs text-slate-500">Supabase-authenticated CMS</p>}
+              {isAuthenticated && <p className="text-xs text-slate-500">Authenticated editorial console with local runtime editing</p>}
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-colors">

@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import {
+  ARCHITECTURE_DECISION_PROMPTS,
   ARCHITECTURE_PATTERN_REFERENCES,
-  ARCHITECTURE_TELEMETRY_WATCHPOINTS,
   ICON_MAP,
   PLANNER_HANDOFF_LABEL,
   PLANNER_HANDOFF_STANDARD_TEXT,
@@ -11,13 +11,95 @@ import {
   VENDOR_NEUTRAL_ARCHITECTURE_LENS,
 } from '../constants';
 import { Layers, Server, GitMerge, ArrowRight, ChevronRight } from 'lucide-react';
+import DecisionSimulator from './DecisionSimulator';
 import GlossaryTerm from './GlossaryTerm';
+import type { DecisionSimulatorResult, RunbookReference, TelemetryWatchpoint } from '../types';
 import SourceBadge from './SourceBadge';
 import TelemetryWatchPanel from './TelemetryWatchPanel';
 import { claimText, hasSourceMetadata } from '../utils/sourceClaims';
 
 const ArchitectureSection: React.FC = () => {
   const { scalingConcepts } = useData();
+  const [selectedTraits, setSelectedTraits] = useState<Record<string, string>>({
+    synchronization: 'barrier',
+    storageCoupling: 'low',
+    scaleCertainty: 'fixed',
+    tailSensitivity: 'strict',
+  });
+  const [manualPatternId, setManualPatternId] = useState<string | null>(null);
+
+  const computedPatternId = useMemo(() => {
+    if (selectedTraits.scaleCertainty === 'growing' || selectedTraits.synchronization === 'uncertain') {
+      return 'modular-pod-expansion-fabric';
+    }
+    if (selectedTraits.storageCoupling === 'high' || selectedTraits.synchronization === 'mixed') {
+      return 'burst-tolerant-mixed-fabric';
+    }
+    if (selectedTraits.tailSensitivity === 'strict') {
+      return 'deterministic-collective-fabric';
+    }
+    return 'burst-tolerant-mixed-fabric';
+  }, [selectedTraits]);
+
+  const architectureResults = useMemo<DecisionSimulatorResult[]>(() => {
+    const runbookMap: Record<string, RunbookReference[]> = {
+      'deterministic-collective-fabric': [
+        { id: 'allreduce-tail-latency', label: 'High Tail Latency During All-Reduce', context: 'Use this when one rail or path is stretching synchronized collective completion.' },
+        { id: 'ecn-instability', label: 'ECN Mark Rate Instability', context: 'Use this when early congestion feedback is not arriving before pause or queue spread.' },
+      ],
+      'burst-tolerant-mixed-fabric': [
+        { id: 'incast-collapse', label: 'Throughput Collapse During Incast', context: 'Use this when checkpoint, shuffle, or convergent phases collapse receiver throughput.' },
+        { id: 'ecn-instability', label: 'ECN Mark Rate Instability', context: 'Use this when mixed-stage burst pressure outruns the feedback loop.' },
+      ],
+      'modular-pod-expansion-fabric': [
+        { id: 'allreduce-tail-latency', label: 'High Tail Latency During All-Reduce', context: 'Use this when expansion boundaries create new hot paths or straggler rails.' },
+        { id: 'incast-collapse', label: 'Throughput Collapse During Incast', context: 'Use this when pod boundaries or receivers become convergent bottlenecks as scale grows.' },
+      ],
+    };
+
+    return ARCHITECTURE_PATTERN_REFERENCES.map((pattern) => ({
+      id: pattern.id,
+      title: pattern.title,
+      summary: pattern.bestFitWorkload,
+      recommendedPosture: pattern.title,
+      whyItFits: pattern.topologyPosture,
+      whatFailsFirst:
+        pattern.id === 'deterministic-collective-fabric'
+          ? 'The first visible failure is usually straggler amplification from rail imbalance, late ECN response, or a degraded path under synchronized load.'
+          : pattern.id === 'burst-tolerant-mixed-fabric'
+            ? 'The first failure is usually a lifecycle transition, especially checkpoint or shuffle, where storage-coupled pressure collides with job-critical traffic.'
+            : 'The first failure is usually asymmetric growth: one pod boundary, plane, or expansion edge starts carrying more coordination pain than the rest.'
+      ,
+      tradeoffs: pattern.tradeoffs,
+      telemetry: pattern.telemetryWatchpoints.map((item) => ({
+        label: item,
+        signal: item,
+        whyItMatters:
+          pattern.id === 'deterministic-collective-fabric'
+            ? 'This validates whether synchronized workloads are seeing predictable, bounded tail behavior.'
+            : pattern.id === 'burst-tolerant-mixed-fabric'
+              ? 'This validates whether mixed-stage pressure is isolated instead of leaking across the fabric.'
+              : 'This validates whether phased growth is staying architecturally clean rather than creating hot boundaries.',
+      })) as TelemetryWatchpoint[],
+      runbookLinks: runbookMap[pattern.id],
+      plannerTrigger: pattern.plannerTrigger,
+      misconception:
+        pattern.id === 'deterministic-collective-fabric'
+          ? 'Do not summarize this as “just make it lossless.” The real lesson is that synchronized workloads punish weak symmetry and late feedback immediately.'
+          : pattern.id === 'burst-tolerant-mixed-fabric'
+            ? 'Do not treat storage and checkpoint behavior as backend details. If those stages dominate recovery or queue pressure, they are architecture inputs.'
+            : 'Do not postpone expansion thinking until later. If scale certainty is low, modularity is part of the design posture from day one.',
+      diagramMode: pattern.id,
+    }));
+  }, []);
+
+  const activeArchitectureResult =
+    architectureResults.find((item) => item.id === (manualPatternId ?? computedPatternId)) || architectureResults[0];
+
+  const handleTraitChange = (promptId: string, optionId: string) => {
+    setSelectedTraits((prev) => ({ ...prev, [promptId]: optionId }));
+    setManualPatternId(null);
+  };
 
   return (
     <section id="etherlink" className="py-32 bg-[#0F1117] relative border-t border-white/5">
@@ -107,38 +189,25 @@ const ArchitectureSection: React.FC = () => {
         </div>
 
         <div className="mb-24">
-          <div className="mb-10">
-            <div className="text-blue-500 font-mono text-xs uppercase tracking-widest mb-4">Standardized pattern reference</div>
-            <h3 className="text-2xl font-bold text-white mb-3">Compare architecture postures as tradeoffs, not just diagrams</h3>
-            <p className="text-slate-400 max-w-3xl text-sm">
-              These reference patterns standardize the decision conversation around workload fit, tradeoffs, migration constraints, and what you need to validate operationally.
-            </p>
-          </div>
-          <div className="grid gap-6 xl:grid-cols-3">
-            {ARCHITECTURE_PATTERN_REFERENCES.map((pattern) => (
-              <div key={pattern.id} className="rounded-2xl border border-white/5 bg-[#161b22] p-6">
-                <div className="mb-2 text-xs font-mono uppercase tracking-[0.18em] text-blue-400">Pattern</div>
-                <h4 className="text-xl font-bold text-white mb-4">{pattern.title}</h4>
-                <div className="space-y-4 text-sm">
-                  <PatternField label="Best-fit workload" value={pattern.bestFitWorkload} />
-                  <PatternField label="Topology posture" value={pattern.topologyPosture} />
-                  <PatternField label="Operational complexity" value={pattern.operationalComplexity} />
-                  <PatternField label="Migration constraint" value={pattern.migrationConstraints} />
-                  <PatternList label="Strengths" items={pattern.strengths} tone="emerald" />
-                  <PatternList label="Tradeoffs" items={pattern.tradeoffs} tone="amber" />
-                  <PatternList label="Telemetry watchpoints" items={pattern.telemetryWatchpoints} tone="cyan" />
-                  <PatternField label="When to hand off" value={pattern.plannerTrigger} />
-                </div>
-              </div>
-            ))}
-          </div>
+          <DecisionSimulator
+            eyebrow="Standardized pattern reference"
+            title="Choose the workload conditions, then see the architecture consequence"
+            intro="This simulator turns the architecture comparison into a real decision flow. Set the workload traits first, then validate the posture, what fails first, and what you need to watch operationally."
+            prompts={ARCHITECTURE_DECISION_PROMPTS}
+            selectedValues={selectedTraits}
+            onChange={handleTraitChange}
+            results={architectureResults}
+            activeResult={activeArchitectureResult}
+            onSelectResult={setManualPatternId}
+            renderVisual={renderArchitectureDecisionVisual}
+          />
         </div>
 
         <div className="mb-24">
           <TelemetryWatchPanel
-            title="Validate the architecture with the right telemetry"
-            intro="A topology choice is only credible if the workload can prove it in counters and timing behavior. These watchpoints make architecture validation operational rather than rhetorical."
-            items={ARCHITECTURE_TELEMETRY_WATCHPOINTS}
+            title="Validate the active posture with the right telemetry"
+            intro="The simulator recommendation only matters if the workload can prove it in counters and timing behavior. These watchpoints now follow the active posture."
+            items={activeArchitectureResult.telemetry}
           />
         </div>
 
@@ -295,28 +364,91 @@ const ArchitectureSection: React.FC = () => {
 
 export default ArchitectureSection;
 
-const PatternField: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div>
-    <div className="mb-1 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">{label}</div>
-    <p className="leading-relaxed text-slate-300">{value}</p>
+const renderArchitectureDecisionVisual = (result: DecisionSimulatorResult) => {
+  switch (result.diagramMode) {
+    case 'burst-tolerant-mixed-fabric':
+      return <BurstMixedVisual />;
+    case 'modular-pod-expansion-fabric':
+      return <ModularPodVisual />;
+    case 'deterministic-collective-fabric':
+    default:
+      return <DeterministicCollectiveVisual />;
+  }
+};
+
+const DeterministicCollectiveVisual: React.FC = () => (
+  <div className="relative h-44">
+    <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-blue-400">Balanced non-blocking rails</div>
+    <div className="absolute inset-x-8 top-4 grid grid-cols-2 gap-8">
+      <div className="h-2 rounded-full bg-blue-500/40" />
+      <div className="h-2 rounded-full bg-blue-500/40" />
+    </div>
+    <div className="absolute inset-x-10 top-10 grid grid-cols-4 gap-4">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div key={index} className="h-20 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-3">
+          <div className="mb-2 h-1.5 rounded-full bg-blue-400/60" />
+          <div className="h-1.5 rounded-full bg-blue-400/40" />
+          <div className="mt-6 h-8 rounded-lg bg-[#0b1020]" />
+        </div>
+      ))}
+    </div>
+    <svg className="absolute inset-0 h-full w-full opacity-60">
+      <path d="M70,36 L110,70" stroke="#60a5fa" strokeWidth="1.5" />
+      <path d="M130,36 L155,70" stroke="#60a5fa" strokeWidth="1.5" />
+      <path d="M205,36 L195,70" stroke="#60a5fa" strokeWidth="1.5" />
+      <path d="M265,36 L240,70" stroke="#60a5fa" strokeWidth="1.5" />
+      <path d="M70,36 L195,70" stroke="#60a5fa" strokeWidth="1" strokeDasharray="4 4" />
+      <path d="M265,36 L110,70" stroke="#60a5fa" strokeWidth="1" strokeDasharray="4 4" />
+    </svg>
   </div>
 );
 
-const PatternList: React.FC<{ label: string; items: string[]; tone: 'emerald' | 'amber' | 'cyan' }> = ({ label, items, tone }) => {
-  const toneClass =
-    tone === 'emerald' ? 'text-emerald-300' : tone === 'amber' ? 'text-amber-300' : 'text-cyan-300';
-
-  return (
-    <div>
-      <div className={`mb-2 text-[11px] font-mono uppercase tracking-[0.18em] ${toneClass}`}>{label}</div>
-      <ul className="space-y-2">
-        {items.map((item) => (
-          <li key={item} className="flex gap-2 text-slate-300">
-            <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${tone === 'emerald' ? 'bg-emerald-400' : tone === 'amber' ? 'bg-amber-400' : 'bg-cyan-400'}`} />
-            <span className="leading-relaxed">{item}</span>
-          </li>
-        ))}
-      </ul>
+const BurstMixedVisual: React.FC = () => (
+  <div className="relative h-44">
+    <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-violet-300">Checkpoint-aware isolation</div>
+    <div className="grid h-32 grid-cols-[1fr_auto_1fr] gap-4">
+      <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4">
+        <div className="mb-2 text-xs text-cyan-200">Training path</div>
+        <div className="space-y-2">
+          <div className="h-2 rounded-full bg-cyan-400/60" />
+          <div className="h-2 rounded-full bg-cyan-400/40" />
+        </div>
+      </div>
+      <div className="flex items-center justify-center text-slate-500">||</div>
+      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+        <div className="mb-2 text-xs text-amber-200">Checkpoint / storage path</div>
+        <div className="space-y-2">
+          <div className="h-2 rounded-full bg-amber-400/60" />
+          <div className="h-2 rounded-full bg-amber-400/40" />
+        </div>
+      </div>
     </div>
-  );
-};
+    <div className="absolute bottom-0 left-0 right-0 rounded-xl border border-white/5 bg-[#0b1020] px-4 py-3 text-sm text-slate-300">
+      The architecture protects lifecycle transitions instead of assuming steady-state traffic tells the whole story.
+    </div>
+  </div>
+);
+
+const ModularPodVisual: React.FC = () => (
+  <div className="relative h-44">
+    <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-emerald-300">Pod-oriented expansion path</div>
+    <div className="grid h-32 grid-cols-3 gap-4">
+      {['Pod A', 'Pod B', 'Future Pod'].map((label, index) => (
+        <div
+          key={label}
+          className={`rounded-2xl border p-4 ${index === 2 ? 'border-white/10 bg-white/5' : 'border-emerald-500/20 bg-emerald-500/10'}`}
+        >
+          <div className={`mb-3 text-xs ${index === 2 ? 'text-slate-400' : 'text-emerald-200'}`}>{label}</div>
+          <div className="space-y-2">
+            <div className={`h-2 rounded-full ${index === 2 ? 'bg-slate-700' : 'bg-emerald-400/60'}`} />
+            <div className={`h-2 rounded-full ${index === 2 ? 'bg-slate-800' : 'bg-emerald-400/40'}`} />
+          </div>
+        </div>
+      ))}
+    </div>
+    <svg className="absolute inset-0 h-full w-full opacity-50">
+      <path d="M92,72 L176,72" stroke="#34d399" strokeWidth="1.5" strokeDasharray="5 4" />
+      <path d="M208,72 L292,72" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="5 4" />
+    </svg>
+  </div>
+);

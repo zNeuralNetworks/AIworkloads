@@ -10,6 +10,11 @@ import {
 import { TRAFFIC_PATTERN_LAB } from '../constants';
 import type { TrafficPatternLabItem } from '../types';
 
+interface TrafficPatternLabProps {
+  activePatternId?: string;
+  onPatternChange?: (patternId: string) => void;
+}
+
 const PATTERN_ACCENTS: Record<string, { border: string; bg: string; text: string; chip: string }> = {
   'all-reduce': {
     border: 'border-blue-500/30',
@@ -47,8 +52,9 @@ function accentFor(pattern: TrafficPatternLabItem) {
   return PATTERN_ACCENTS[pattern.id] || PATTERN_ACCENTS['all-reduce'];
 }
 
-const TrafficPatternLab: React.FC = () => {
-  const [activePatternId, setActivePatternId] = useState(TRAFFIC_PATTERN_LAB[0]?.id ?? 'all-reduce');
+const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: controlledPatternId, onPatternChange }) => {
+  const [uncontrolledPatternId, setUncontrolledPatternId] = useState(TRAFFIC_PATTERN_LAB[0]?.id ?? 'all-reduce');
+  const activePatternId = controlledPatternId ?? uncontrolledPatternId;
 
   const activePattern = useMemo(
     () => TRAFFIC_PATTERN_LAB.find((item) => item.id === activePatternId) || TRAFFIC_PATTERN_LAB[0],
@@ -81,7 +87,12 @@ const TrafficPatternLab: React.FC = () => {
           return (
             <button
               key={pattern.id}
-              onClick={() => setActivePatternId(pattern.id)}
+              onClick={() => {
+                if (!controlledPatternId) {
+                  setUncontrolledPatternId(pattern.id);
+                }
+                onPatternChange?.(pattern.id);
+              }}
               className={`rounded-2xl border p-4 text-left transition-all ${
                 isActive
                   ? `${cardAccent.border} ${cardAccent.bg}`

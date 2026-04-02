@@ -1,6 +1,7 @@
 import {
   ConceptData,
   DataMovementStage,
+  DecisionSimulatorPrompt,
   InfrastructureImplication,
   ScalingConcept,
   TopologyBranch,
@@ -267,5 +268,31 @@ export const DATA_MOVEMENT_MODULE_IMPLICATIONS: InfrastructureImplication[] = [
     label: 'When To Hand Off',
     detail:
       `Once lifecycle bottlenecks are clear, move to ${PLANNER_HANDOFF_DESTINATION} for quantitative implementation outputs such as topology scale, node and NIC counts, fabric tiers, and optics.`,
+  },
+];
+
+export const DATA_MOVEMENT_DECISION_PROMPTS: DecisionSimulatorPrompt[] = [
+  {
+    id: 'stageCondition',
+    title: 'Stage condition',
+    prompt: 'Which lifecycle stage is creating the infrastructure question right now?',
+    layout: 'tiles',
+    options: [
+      { id: 'ingest', label: 'Ingest readiness', description: 'First batch is late, startup is inconsistent, or staging feels fragile.' },
+      { id: 'shuffle', label: 'Shuffle imbalance', description: 'Redistribution creates skew, incast, or unstable startup behavior.' },
+      { id: 'checkpoint', label: 'Checkpoint pressure', description: 'Save windows collide with queueing, storage, or job time.' },
+      { id: 'restore', label: 'Restart fragility', description: 'Recovery windows stretch out and restart behavior is unpredictable.' },
+    ],
+  },
+  {
+    id: 'environmentModifier',
+    title: 'Environment modifier',
+    prompt: 'Which environment context most changes the design posture?',
+    options: [
+      { id: 'storage-coupled', label: 'Storage-coupled', description: 'Storage traffic is tightly coupled to the fabric event.' },
+      { id: 'synchronized-training', label: 'Synchronized training', description: 'Collective timing pressure is nearby or immediately downstream.' },
+      { id: 'mixed-scientific', label: 'Mixed scientific workflow', description: 'Multiple lifecycle phases and workflow modes share the same backend.' },
+      { id: 'recovery-heavy', label: 'Recovery-heavy', description: 'Restart and failure recovery posture matter almost as much as steady-state job time.' },
+    ],
   },
 ];
