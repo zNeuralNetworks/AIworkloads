@@ -1,7 +1,12 @@
 
 import React from 'react';
 import { useData } from '../contexts/DataContext';
-import { ICON_MAP, TOPOLOGY_SELECTION } from '../constants';
+import {
+  ICON_MAP,
+  PLANNER_HANDOFF_LABEL,
+  PLANNER_HANDOFF_STANDARD_TEXT,
+  TOPOLOGY_SELECTION,
+} from '../constants';
 import { Layers, Server, GitMerge, ArrowRight, ChevronRight } from 'lucide-react';
 import GlossaryTerm from './GlossaryTerm';
 import SourceBadge from './SourceBadge';
@@ -219,10 +224,10 @@ const ArchitectureSection: React.FC = () => {
 
           {/* Handoff CTA */}
           <div className="mt-10 bg-[#0d1117] border border-blue-500/20 rounded-2xl p-6">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-blue-300 mb-2">Next Step</div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-blue-300 mb-2">{PLANNER_HANDOFF_LABEL}</div>
             <p className="text-sm text-slate-300 leading-relaxed">
-              Use this architecture framing to move into Optics Master / AI Cluster Planner for
-              quantitative sizing outputs (nodes, NICs, leaf/spine counts, and optics).
+              Validate the architecture posture here first, then move to quantitative planning.{' '}
+              {PLANNER_HANDOFF_STANDARD_TEXT}
             </p>
           </div>
 

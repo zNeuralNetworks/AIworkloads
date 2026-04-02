@@ -5,6 +5,7 @@ import {
   ScalingConcept,
   TopologyBranch,
 } from '../types';
+import { PLANNER_HANDOFF_DESTINATION } from './plannerHandoff';
 import { claim } from '../utils/sourceClaims';
 
 const RDMA_SOURCE = {
@@ -265,6 +266,6 @@ export const DATA_MOVEMENT_MODULE_IMPLICATIONS: InfrastructureImplication[] = [
   {
     label: 'When To Hand Off',
     detail:
-      'Once lifecycle bottlenecks are clear, hand the sizing question to AI Cluster Planner or Optics Master to turn these behaviors into node, tier, and fabric-capacity decisions.',
+      `Once lifecycle bottlenecks are clear, move to ${PLANNER_HANDOFF_DESTINATION} for quantitative implementation outputs such as topology scale, node and NIC counts, fabric tiers, and optics.`,
   },
 ];

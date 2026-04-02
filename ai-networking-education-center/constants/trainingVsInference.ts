@@ -1,4 +1,5 @@
 import { InfrastructureImplication, TrafficPatternLabItem, WorkloadProfile } from '../types';
+import { PLANNER_HANDOFF_DESTINATION } from './plannerHandoff';
 
 export interface WorkloadDecisionRow {
   dimension: string;
@@ -249,6 +250,6 @@ export const WORKLOAD_MODULE_IMPLICATIONS: InfrastructureImplication[] = [
   {
     label: 'When to hand off',
     detail:
-      'Once the workload profile and failure mode are identified, hand off to AI Cluster Planner or other sizing tools for capacity-specific topology and platform decisions.',
+      `Once the workload profile and failure mode are clear, move to ${PLANNER_HANDOFF_DESTINATION} for quantitative implementation outputs such as topology scale, node and NIC counts, fabric tiers, and optics.`,
   },
 ];

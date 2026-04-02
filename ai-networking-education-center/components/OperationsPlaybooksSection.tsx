@@ -5,6 +5,8 @@ import {
   OPERATIONS_PRINCIPLES,
   OPERATIONS_MIGRATION_ROWS,
   OPERATIONS_CHECKS,
+  PLANNER_HANDOFF_LABEL,
+  PLANNER_HANDOFF_STANDARD_TEXT,
 } from '../constants';
 
 const SEVERITY_STYLES: Record<string, string> = {
@@ -253,10 +255,10 @@ const OperationsPlaybooksSection: React.FC = () => {
 
         {/* Handoff CTA */}
         <div className="mt-8 bg-[#0d1117] border border-emerald-500/20 rounded-2xl p-6">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-300 mb-2">Planner Handoff</div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-300 mb-2">{PLANNER_HANDOFF_LABEL}</div>
           <p className="text-sm text-slate-300 leading-relaxed">
-            After validating operational implications and risk posture, proceed to Optics Master /
-            AI Cluster Planner for quantitative implementation outputs and sizing.
+            Validate operational implications and risk posture here first, then move to quantitative planning.{' '}
+            {PLANNER_HANDOFF_STANDARD_TEXT}
           </p>
         </div>
       </div>

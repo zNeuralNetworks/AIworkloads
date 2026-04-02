@@ -1,5 +1,10 @@
 export { ICON_MAP } from './icons';
 export { NAVIGATION } from './navigation';
+export {
+  PLANNER_HANDOFF_LABEL,
+  PLANNER_HANDOFF_DESTINATION,
+  PLANNER_HANDOFF_STANDARD_TEXT,
+} from './plannerHandoff';
 export { GLOSSARY, GLOSSARY_TERM_DOMAINS } from './glossary';
 export { DEFAULT_APP_CONFIG, DEFAULT_HOME_MODULES } from './modules';
 export {

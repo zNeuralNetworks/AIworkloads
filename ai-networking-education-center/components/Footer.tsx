@@ -11,7 +11,7 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
     <footer className="bg-slate-950 py-12 border-t border-slate-900 text-center relative z-10">
       <div className="container mx-auto px-6">
         <p className="text-slate-500 text-sm">
-          AI Networking Education Center. Designed for learning.
+          Scientific Workflow Architecture. Architecture reference for workload behavior and infrastructure implications.
         </p>
         
         {/* Discreet Admin Trigger - No Hint */}

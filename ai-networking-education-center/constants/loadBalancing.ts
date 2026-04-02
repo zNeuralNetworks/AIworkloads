@@ -1,4 +1,5 @@
 import { InfrastructureImplication } from '../types';
+import { PLANNER_HANDOFF_DESTINATION } from './plannerHandoff';
 
 export type Suitability = 'poor' | 'good' | 'excellent';
 
@@ -232,6 +233,6 @@ export const COMMUNICATION_MODULE_IMPLICATIONS: InfrastructureImplication[] = [
   {
     label: 'When to hand off',
     detail:
-      'Once the dominant communication pattern is known, hand off to sizing and topology tools to quantify radix, lane count, and pod-scale implications.',
+      `Once the dominant communication pattern is clear, move to ${PLANNER_HANDOFF_DESTINATION} for quantitative implementation outputs such as radix, lane count, pod scale, and optics.`,
   },
 ];

@@ -2,14 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useActiveSection } from '../hooks/useActiveSection';
 import { MODULE_REGISTRY } from '../app/moduleRegistry';
-import { useLearning } from '../contexts/LearningContext';
-
-const DEPTH_LABELS = {
-  quick: 'Quick take',
-  how: 'How it works',
-  design: 'Design implication',
-  expert: 'Expert depth',
-} as const;
 
 /**
  * StickyModuleHeader
@@ -22,7 +14,6 @@ const DEPTH_LABELS = {
  */
 const StickyModuleHeader: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
-  const { selectedDepthPreference } = useLearning();
 
   const mainModules = MODULE_REGISTRY.filter(m => m.page === 'main');
   const anchorIds = mainModules.map(m => m.anchorId);
@@ -55,9 +46,6 @@ const StickyModuleHeader: React.FC = () => {
             </span>
             <span className="text-slate-700 text-xs">·</span>
             <span className="text-sm font-semibold text-slate-200">{activeModule!.title}</span>
-            <span className="hidden md:block rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400">
-              {DEPTH_LABELS[selectedDepthPreference]}
-            </span>
             {activeModule!.subtitle && (
               <>
                 <span className="hidden sm:block text-slate-700 text-xs">—</span>
