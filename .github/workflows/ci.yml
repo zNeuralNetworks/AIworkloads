@@ -40,7 +40,7 @@ jobs:
   build-docker:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.GCP_PROJECT_ID != '' && secrets.GCP_SERVICE_ACCOUNT_KEY != ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: read
       id-token: write
@@ -50,27 +50,43 @@ jobs:
       IMAGE_NAME: ai-networking-center
     steps:
       - uses: actions/checkout@v4
+      - name: Check deploy prerequisites
+        id: deploy_guard
+        shell: bash
+        run: |
+          if [[ -n "${GCP_PROJECT_ID}" && -n "${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}" ]]; then
+            echo "can_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "can_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping deploy: missing GCP_PROJECT_ID and/or GCP_SERVICE_ACCOUNT_KEY."
+          fi
       - name: Authenticate to Google Cloud
+        if: steps.deploy_guard.outputs.can_deploy == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
       - name: Setup gcloud CLI
+        if: steps.deploy_guard.outputs.can_deploy == 'true'
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
       - name: Configure Docker auth
+        if: steps.deploy_guard.outputs.can_deploy == 'true'
         run: gcloud auth configure-docker "${{ env.GCP_REGION }}-docker.pkg.dev" --quiet
       - name: Build Docker image
+        if: steps.deploy_guard.outputs.can_deploy == 'true'
         run: |
           docker build \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/app/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/app/${{ env.IMAGE_NAME }}:latest \
             ./ai-networking-education-center
       - name: Push Docker image
+        if: steps.deploy_guard.outputs.can_deploy == 'true'
         run: |
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/app/${{ env.IMAGE_NAME }}:${{ github.sha }}
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/app/${{ env.IMAGE_NAME }}:latest
       - name: Deploy to Cloud Run
+        if: steps.deploy_guard.outputs.can_deploy == 'true'
         run: |
           gcloud run deploy ${{ env.IMAGE_NAME }} \
             --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/app/${{ env.IMAGE_NAME }}:${{ github.sha }} \
