@@ -17,7 +17,7 @@ An architecture decision reference for understanding how workload behavior drive
 | 01 | **Architecture Patterns** | `/#etherlink` | AI Ethernet fabric basics, leaf-spine topology, North-South vs East-West traffic |
 | 02 | **Data Movement** | `/#concepts` | RDMA, RoCEv2, NVMe-oF, kernel bypass, GPUDirect, lossless fabric requirements |
 | 03 | **Transport & Congestion** | `/#protocols` | RoCEv2 vs Ultra Ethernet (UET), PFC/ECN, DCQCN congestion control |
-| 04 | **Protocol Deep Dive** | `/deep-dive` | Advanced RoCEv2/UET technical comparison |
+| 04 | **Transport Control Lab** | `/deep-dive` | Advanced RoCEv2/UET technical comparison |
 | 05 | **Communication Patterns** | `/#load-balancing` | ECMP, DLB, CLB, packet spraying, path symmetry |
 | 06 | **Transport Tradeoffs** | `/#uec` | RoCEv2 vs InfiniBand vs UET tradeoffs |
 | 07 | **Performance Implications** | `/#performance` | ECN, PFC, head-of-line blocking, job completion time, tail latency |
@@ -212,7 +212,7 @@ The app includes an authenticated admin editing surface that updates runtime dat
 Start from repo root:
 
 ```bash
-cd "/Users/theorajan/local builds/Aiworkloads"
+cd <repo-root>
 git checkout main
 git pull --ff-only origin main
 cd ai-networking-education-center
@@ -252,11 +252,35 @@ Typical flow:
 5. Render through the consuming component
 6. Add an admin editor if runtime editing is required
 
+### Module Contract
+
+Every section component follows a consistent 7-slot decision model, rendered in order:
+
+| Slot | Label | Rendered by |
+|------|-------|-------------|
+| 1 | Why This Matters | inline card grid |
+| 2 | Decision model | inline card or `DecisionSimulator` |
+| 3 | What fails first | `InfrastructureImplicationsPanel` |
+| 4 | What to monitor | `TelemetryWatchPanel` |
+| 5 | What to tune | `InfrastructureImplicationsPanel` |
+| 6 | Next decision | Transfer Prompt inline block with mastery CTA |
+| 7 | Planner handoff | `CompactDisclosure` using `PLANNER_HANDOFF_SHORT_TEXT` or `PLANNER_HANDOFF_STANDARD_TEXT` |
+
+Slots 3–5 are grouped in a `*_MODULE_IMPLICATIONS` constant array exported from the module's constants file and passed to `InfrastructureImplicationsPanel`. The planner handoff short variant (`PLANNER_HANDOFF_SHORT_TEXT`) is used for most sections; Architecture and Platform sections use the full `PLANNER_HANDOFF_STANDARD_TEXT`.
+
+Per-module mastery CTAs follow the pattern `'Mark [X] lens reviewed'` / `'[X] lens reviewed'` (e.g. "Mark transport lens reviewed").
+
+---
+
 ### Key Patterns
 
 - `ICON_MAP` in `constants/icons.ts` maps serializable icon keys to Lucide components
 - `GlossaryTerm` wraps known technical terms with inline glossary tooltips
 - `FadeIn` provides intersection-observer-triggered reveal animations
+- `InfrastructureImplicationsPanel` renders the What fails first / What to monitor / What to tune slot group from a `*_MODULE_IMPLICATIONS` array
+- `TelemetryWatchPanel` renders named telemetry watchpoints with signal descriptions
+- `CompactDisclosure` wraps collapsible deep-explanation or planner handoff content
+- `claim()` in `utils/sourceClaims.ts` wraps numeric claims with source metadata — required for all quantitative assertions in constants
 
 ---
 

@@ -12,12 +12,12 @@ If you are trying to run, test, review, or contribute to the app, start there.
 - `/.github/` is the only authoritative GitHub Actions location.
 - `cloudbuild.yaml` remains at repo root because it orchestrates the app directory from the outer repo.
 - `docs/archive/root-history/` contains historical planning, review, and backlog material that is no longer part of the main contributor path.
-- `docs/internal/assistant/` contains assistant-specific metadata kept out of the public app surface.
+- `docs/internal/` contains assistant session logs (`WORKLOG.md`), a canonical doc index (`DOC_MAP.md`), and assistant-specific metadata kept out of the public app surface.
 
 ## Standard local bootstrap
 
 ```bash
-cd "/Users/theorajan/local builds/Aiworkloads"
+cd <repo-root>
 git checkout main
 git pull --ff-only origin main
 cd ai-networking-education-center
