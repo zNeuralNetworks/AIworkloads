@@ -7,21 +7,25 @@ import {
   AlertCircle,
   Boxes,
   Server,
-  ArrowRightLeft,
 } from 'lucide-react';
 import GlossaryTerm from './GlossaryTerm';
+import CompactDisclosure from './CompactDisclosure';
 import InfrastructureImplicationsPanel from './InfrastructureImplicationsPanel';
 import RunbookLinksPanel from './RunbookLinksPanel';
 import SoWhatCallout from './SoWhatCallout';
 import TelemetryWatchPanel from './TelemetryWatchPanel';
+import PatternDecoder from './PatternDecoder';
+import TrafficPatternLab from './TrafficPatternLab';
 import {
   COMMUNICATION_PATTERNS,
   LB_MECHANISMS,
   LB_DECISION_TABLE,
   COMMUNICATION_MODULE_IMPLICATIONS,
 } from '../constants/loadBalancing';
+import { PLANNER_HANDOFF_LABEL, PLANNER_HANDOFF_SHORT_TEXT } from '../constants';
 import type { Suitability } from '../constants/loadBalancing';
 import type { RunbookReference, TelemetryWatchpoint } from '../types';
+import { useLearning } from '../contexts/LearningContext';
 
 const ICON_COMPONENTS: Record<string, React.FC<{ size?: number; className?: string }>> = {
   GitMerge,
@@ -92,11 +96,18 @@ const COMMUNICATION_RUNBOOKS: RunbookReference[] = [
 ];
 
 const LoadBalancingSection: React.FC = () => {
-  const [activePatternId, setActivePatternId] = useState(COMMUNICATION_PATTERNS[0]?.id ?? 'all-reduce');
+  const { activeTrafficPattern, setActiveTrafficPattern, toggleMastered, masteredModules } = useLearning();
+  const isMastered = masteredModules.includes('load-balancing');
+  const [activePatternId, setActivePatternId] = useState(activeTrafficPattern || COMMUNICATION_PATTERNS[0]?.id || 'all-reduce');
   const activePattern = useMemo(
     () => COMMUNICATION_PATTERNS.find((pattern) => pattern.id === activePatternId) || COMMUNICATION_PATTERNS[0],
     [activePatternId]
   );
+
+  React.useEffect(() => {
+    if (!activePattern) return;
+    setActiveTrafficPattern(activePattern.id);
+  }, [activePattern, setActiveTrafficPattern]);
 
   return (
     <section id="load-balancing" className="border-t border-slate-900 bg-slate-950 py-24">
@@ -113,7 +124,31 @@ const LoadBalancingSection: React.FC = () => {
           </p>
         </div>
 
+        <div className="mb-12 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
+            <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-blue-400">Why This Matters</div>
+            <h3 className="mb-3 text-2xl font-bold text-white">The pattern determines the mechanism</h3>
+            <p className="text-sm leading-relaxed text-slate-300">
+              Load-balancing failures are almost always communication-pattern mismatches, not feature gaps. Identifying whether the workload creates synchronized collectives, broad fan-out, receiver convergence, or expert dispatch resolves most mechanism choices before hardware is specified.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
+            <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-blue-400">Decision model</div>
+            <h3 className="mb-3 text-xl font-bold text-white">Pattern → mechanism → posture</h3>
+            <ol className="space-y-2 text-sm text-slate-300">
+              <li className="flex gap-2"><span className="shrink-0 font-mono text-blue-400">1.</span>Identify the dominant communication pattern from the traffic shape</li>
+              <li className="flex gap-2"><span className="shrink-0 font-mono text-blue-400">2.</span>Choose the load-balancing mechanism that matches the pattern's timing and scope</li>
+              <li className="flex gap-2"><span className="shrink-0 font-mono text-blue-400">3.</span>Set the congestion posture to complement the selected control loop</li>
+            </ol>
+          </div>
+        </div>
+
         <div className="mb-12">
+          {activeTrafficPattern && (
+            <div className="mb-6 rounded-2xl border border-blue-500/15 bg-blue-500/10 p-4 text-sm text-blue-100">
+              The active traffic pattern is carried forward from the earlier reference flow. Change it here if the workload geometry is different from the initial profile.
+            </div>
+          )}
           <div className="mb-4 text-xs font-mono uppercase tracking-[0.28em] text-blue-500">
             Pattern Signatures
           </div>
@@ -121,6 +156,13 @@ const LoadBalancingSection: React.FC = () => {
         </div>
 
         <div className="mb-20">
+          <div className="mb-8">
+            <TrafficPatternLab
+              activePatternId={activePatternId}
+              onPatternChange={setActivePatternId}
+            />
+          </div>
+
           <div className="mb-6 grid gap-3 md:grid-cols-4">
             {COMMUNICATION_PATTERNS.map((pattern) => {
               const IconComp = ICON_COMPONENTS[pattern.iconKey] || GitMerge;
@@ -154,87 +196,14 @@ const LoadBalancingSection: React.FC = () => {
           </div>
 
           {activePattern && (
-            <div className="grid gap-6 xl:grid-cols-[1.2fr_0.95fr]">
-              <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 md:p-8">
-                <div className="mb-5 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-blue-400">
-                      Guided Pattern View
-                    </div>
-                    <h3 className="text-2xl font-bold text-white">{activePattern.title}</h3>
-                  </div>
-                  <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-mono uppercase tracking-[0.18em] text-blue-300">
-                    {activePattern.subtitle}
-                  </div>
-                </div>
-
-                <div className="mb-6 rounded-2xl border border-white/5 bg-[#0d1117] p-6">
-                  <PatternVisual patternId={activePattern.id} />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <SignalCard label="What the traffic is doing" value={activePattern.triggerCondition} />
-                  <SignalCard label="Network stress signature" value={activePattern.stressSignature} />
-                  <SignalCard label="Required design posture" value={activePattern.designPosture} />
-                  <SignalCard label="Operational risk" value={activePattern.operationalRisk} warning />
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 md:p-8">
-                <div className="mb-4 text-xs font-mono uppercase tracking-[0.22em] text-blue-400">
-                  Guided Interpretation
-                </div>
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                    <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                      First thing to notice
-                    </div>
-                    <p className="text-sm leading-relaxed text-slate-300">
-                      Start with the traffic geometry. The right question is whether the pattern is
-                      symmetric, convergent, skewed, or storage-coupled, because each one breaks the
-                      fabric in a different way.
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                    <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                      Linked Runbooks
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {activePattern.runbooks.map((runbook) => (
-                        <a
-                          key={`${activePattern.id}-${runbook.id}`}
-                          href={`/operations#${runbook.id}`}
-                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
-                        >
-                          {runbook.label}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                    <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                      Where this leads next
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {['Transport & Congestion', 'Data Movement', 'Mechanism Selection'].map((item) => (
-                        <span
-                          key={item}
-                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                      Once the pattern is clear, move to congestion control and pathing choices.
-                      That is when <GlossaryTerm term="ECMP">ECMP</GlossaryTerm>, <GlossaryTerm term="DLB">DLB</GlossaryTerm>, and <GlossaryTerm term="CLB">CLB</GlossaryTerm> become meaningful decisions instead of feature names.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PatternDecoder
+              title="Turn the geometry into a diagnosis"
+              intro="The lab above shows the traffic shape. This decoder converts that picture into the next useful engineering questions before comparing ECMP, DLB, CLB, or spraying."
+              shape={activePattern.triggerCondition}
+              concentration={activePattern.stressSignature}
+              posture={activePattern.designPosture}
+              failure={activePattern.operationalRisk}
+            />
           )}
         </div>
 
@@ -394,203 +363,40 @@ const LoadBalancingSection: React.FC = () => {
         </div>
 
         <SoWhatCallout body="Do not tune the fabric because you have ECMP, DLB, or CLB available. Tune it because you know whether the workload is creating synchronized collectives, broad fan-out, receiver convergence, or skew-sensitive expert dispatch, and the control loop matches that behavior." />
+
+        <div className="mt-12 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
+            <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-emerald-300">Transfer Prompt</div>
+            <h3 className="mb-3 text-2xl font-bold text-white">Next decision</h3>
+            <p className="mb-5 text-sm leading-relaxed text-slate-300">
+              Once the dominant communication pattern is identified and the control loop is chosen, move to the Operations Playbooks to validate the congestion posture under failure, or to Architecture to confirm topology alignment.
+            </p>
+            <button
+              onClick={() => toggleMastered('load-balancing')}
+              className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                isMastered
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+                  : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
+              }`}
+            >
+              {isMastered ? 'Pattern lens reviewed' : 'Mark pattern lens reviewed'}
+            </button>
+          </div>
+
+          <CompactDisclosure
+            eyebrow={PLANNER_HANDOFF_LABEL}
+            title="Open planner handoff guidance"
+            summary="Move to quantitative planning once the dominant communication pattern is clear."
+          >
+            <p className="text-sm leading-relaxed text-slate-300">
+              Validate the communication pattern and mechanism choice here first, then move to quantitative planning.{' '}
+              {PLANNER_HANDOFF_SHORT_TEXT}
+            </p>
+          </CompactDisclosure>
+        </div>
       </div>
     </section>
   );
 };
 
 export default LoadBalancingSection;
-
-const SignalCard: React.FC<{ label: string; value: string; warning?: boolean }> = ({ label, value, warning = false }) => (
-  <div className={`rounded-xl border p-4 ${warning ? 'border-amber-500/20 bg-amber-500/10' : 'border-white/5 bg-[#111827]'}`}>
-    <div className={`mb-2 text-[11px] font-mono uppercase tracking-[0.18em] ${warning ? 'text-amber-300' : 'text-slate-500'}`}>
-      {label}
-    </div>
-    <p className={`text-sm leading-relaxed ${warning ? 'text-slate-200' : 'text-slate-300'}`}>{value}</p>
-  </div>
-);
-
-const PatternVisual: React.FC<{ patternId: string }> = ({ patternId }) => {
-  switch (patternId) {
-    case 'all-reduce':
-      return <AllReducePatternVisual />;
-    case 'all-to-all':
-      return <AllToAllPatternVisual />;
-    case 'parameter-server':
-      return <ParameterServerPatternVisual />;
-    case 'moe-dispatch':
-      return <MoeDispatchPatternVisual />;
-    default:
-      return <AllReducePatternVisual />;
-  }
-};
-
-const AllReducePatternVisual: React.FC = () => (
-  <div className="relative h-64">
-    <div className="mb-4 text-xs font-mono uppercase tracking-[0.18em] text-blue-400">
-      synchronized collective
-    </div>
-    <div className="relative mx-auto h-44 max-w-md">
-      {[0, 1, 2, 3, 4].map((i) => (
-        <div
-          key={i}
-          className={`absolute h-4 w-4 rounded-full ${
-            i === 4 ? 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.45)]' : 'bg-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.35)]'
-          }`}
-          style={{
-            top: `${50 + 36 * Math.sin(i * 1.25)}%`,
-            left: `${50 + 36 * Math.cos(i * 1.25)}%`,
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-      ))}
-      <svg className="absolute inset-0 h-full w-full opacity-50">
-        <path d="M66,100 L150,35 L242,60 L245,150 L120,175 Z" stroke="#60a5fa" strokeWidth="1.5" fill="none" />
-        <path d="M66,100 L242,60" stroke="#60a5fa" strokeWidth="1.5" className="animate-pulse" />
-        <path d="M150,35 L245,150" stroke="#60a5fa" strokeWidth="1.5" className="animate-pulse" />
-        <path d="M242,60 L120,175" stroke="#60a5fa" strokeWidth="1.5" className="animate-pulse" />
-      </svg>
-      <div className="absolute bottom-0 right-0 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-        one slow rail stretches the whole step
-      </div>
-    </div>
-  </div>
-);
-
-const AllToAllPatternVisual: React.FC = () => (
-  <div className="relative h-64">
-    <div className="mb-4 text-xs font-mono uppercase tracking-[0.18em] text-blue-400">
-      broad fan-out and convergence
-    </div>
-    <div className="grid h-44 grid-cols-2 gap-8">
-      <div className="rounded-xl border border-white/5 bg-[#111827] p-4">
-        <div className="mb-3 text-xs text-slate-500">senders</div>
-        <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-6 rounded bg-blue-500/25" />
-          ))}
-        </div>
-      </div>
-      <div className="rounded-xl border border-white/5 bg-[#111827] p-4">
-        <div className="mb-3 text-xs text-slate-500">receivers</div>
-        <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-6 rounded bg-blue-500/25" />
-          ))}
-        </div>
-      </div>
-      <svg className="absolute inset-0 h-full w-full opacity-55">
-        {[
-          [30, 72, 286, 54],
-          [30, 96, 286, 82],
-          [30, 120, 286, 108],
-          [46, 150, 286, 138],
-          [52, 176, 286, 166],
-        ].map((line, i) => (
-          <path
-            key={i}
-            d={`M${line[0]},${line[1]} C145,${line[1] - 16} 185,${line[3] + 10} ${line[2]},${line[3]}`}
-            stroke="#60a5fa"
-            strokeWidth="2"
-            fill="none"
-            className="animate-pulse"
-          />
-        ))}
-      </svg>
-      <div className="absolute bottom-0 right-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-200">
-        entropy and headroom matter before average utilization does
-      </div>
-    </div>
-  </div>
-);
-
-const ParameterServerPatternVisual: React.FC = () => (
-  <div className="relative h-64">
-    <div className="mb-4 text-xs font-mono uppercase tracking-[0.18em] text-blue-400">
-      converging on a small target set
-    </div>
-    <div className="grid h-44 grid-cols-[1fr_auto_1fr] items-center gap-6">
-      <div className="grid grid-cols-2 gap-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-lg border border-white/5 bg-blue-500/10 p-3 text-center text-xs text-blue-200">
-            worker {i + 1}
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-col gap-3 text-blue-400">
-        <ArrowRightLeft size={18} />
-        <ArrowRightLeft size={18} />
-      </div>
-      <div className="space-y-4">
-        <div className="rounded-xl border border-blue-500/30 bg-[#111827] p-4">
-          <div className="mb-2 flex items-center gap-2 text-blue-300">
-            <Server size={16} />
-            <span className="text-sm font-bold">Aggregator A</span>
-          </div>
-          <div className="h-3 rounded-full bg-blue-500/70" />
-        </div>
-        <div className="rounded-xl border border-blue-500/30 bg-[#111827] p-4">
-          <div className="mb-2 flex items-center gap-2 text-blue-300">
-            <Server size={16} />
-            <span className="text-sm font-bold">Aggregator B</span>
-          </div>
-          <div className="h-3 w-2/3 rounded-full bg-blue-500/35" />
-        </div>
-      </div>
-    </div>
-    <div className="absolute bottom-0 right-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-200">
-      a few receivers can become the real bottleneck
-    </div>
-  </div>
-);
-
-const MoeDispatchPatternVisual: React.FC = () => (
-  <div className="relative h-64">
-    <div className="mb-4 text-xs font-mono uppercase tracking-[0.18em] text-blue-400">
-      skew-sensitive expert routing
-    </div>
-    <div className="grid h-44 grid-cols-[1fr_auto_1fr] items-center gap-6">
-      <div className="space-y-3">
-        {['token batch a', 'token batch b', 'token batch c'].map((label) => (
-          <div key={label} className="rounded-lg border border-white/5 bg-blue-500/10 p-3 text-sm text-blue-200">
-            {label}
-          </div>
-        ))}
-      </div>
-      <GitMerge className="text-blue-400" />
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-blue-400/40 bg-blue-500/20 p-3">
-          <div className="mb-2 flex items-center gap-2 text-sm text-white">
-            <Boxes size={14} className="text-blue-300" />
-            expert 1
-          </div>
-          <div className="h-3 rounded-full bg-blue-400/75" />
-        </div>
-        <div className="rounded-xl border border-white/5 bg-[#111827] p-3">
-          <div className="mb-2 flex items-center gap-2 text-sm text-white">
-            <Boxes size={14} className="text-slate-400" />
-            expert 2
-          </div>
-          <div className="h-3 w-1/2 rounded-full bg-slate-700" />
-        </div>
-        <div className="rounded-xl border border-blue-400/40 bg-blue-500/20 p-3">
-          <div className="mb-2 flex items-center gap-2 text-sm text-white">
-            <Boxes size={14} className="text-blue-300" />
-            expert 3
-          </div>
-          <div className="h-3 rounded-full bg-blue-400/75" />
-        </div>
-        <div className="rounded-xl border border-white/5 bg-[#111827] p-3">
-          <div className="mb-2 flex items-center gap-2 text-sm text-white">
-            <Boxes size={14} className="text-slate-400" />
-            expert 4
-          </div>
-          <div className="h-3 w-1/2 rounded-full bg-slate-700" />
-        </div>
-      </div>
-    </div>
-    <div className="absolute bottom-0 right-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-200">
-      average utilization can hide a few overloaded destinations
-    </div>
-  </div>
-);

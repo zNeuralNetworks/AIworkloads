@@ -22,7 +22,8 @@ const TableOfContents: React.FC = () => {
           key={item.id}
           href={`#${item.anchorId}`}
           onClick={(e) => smoothScrollTo(e, `#${item.anchorId}`)}
-          className="group relative flex items-center justify-end"
+          className="group relative flex items-center justify-end focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70"
+          aria-label={`Jump to ${item.title}`}
         >
           <span
             className={`absolute right-8 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono uppercase tracking-wider transition-all duration-200 ${

@@ -11,13 +11,13 @@ const ETHERLINK_SOURCE = {
 
 export const PERFORMANCE_SECTION_CONTENT = {
   moduleLabel: 'Domain · Performance Implications',
-  title: 'Performance Metrics',
+  title: 'Performance Implications',
   subtitle: claim(
     'Telemetry showing the impact of congestion control and failover on Job Completion Time (JCT).',
     ETHERLINK_SOURCE,
     'perfSectionSubtitle'
   ),
-  systemStatusLabel: 'System Active',
+  systemStatusLabel: 'Validation View',
   stats: [
     {
       label: 'Effective Throughput',

@@ -14,6 +14,9 @@ const DEFAULT_LEARNING_STATE: LearningState = {
   bookmarkedConcepts: [],
   selectedDepthPreference: 'how',
   selfRatedConfidence: {},
+  activeWorkloadProfile: undefined,
+  activeDataMovementStage: undefined,
+  activeTrafficPattern: undefined,
 };
 
 interface LearningContextType extends LearningState {
@@ -24,6 +27,9 @@ interface LearningContextType extends LearningState {
   toggleBookmarkedConcept: (conceptId: string) => void;
   setDepthPreference: (depth: LearningDepth) => void;
   setConfidence: (moduleId: string, confidence: number) => void;
+  setActiveWorkloadProfile: (profileId?: string) => void;
+  setActiveDataMovementStage: (stageId?: string) => void;
+  setActiveTrafficPattern: (patternId?: string) => void;
 }
 
 const LearningContext = createContext<LearningContextType | undefined>(undefined);
@@ -119,6 +125,36 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   }, []);
 
+  const setActiveWorkloadProfile = useCallback((profileId?: string) => {
+    setState((prev) => {
+      if (prev.activeWorkloadProfile === profileId) {
+        return prev;
+      }
+
+      return { ...prev, activeWorkloadProfile: profileId };
+    });
+  }, []);
+
+  const setActiveDataMovementStage = useCallback((stageId?: string) => {
+    setState((prev) => {
+      if (prev.activeDataMovementStage === stageId) {
+        return prev;
+      }
+
+      return { ...prev, activeDataMovementStage: stageId };
+    });
+  }, []);
+
+  const setActiveTrafficPattern = useCallback((patternId?: string) => {
+    setState((prev) => {
+      if (prev.activeTrafficPattern === patternId) {
+        return prev;
+      }
+
+      return { ...prev, activeTrafficPattern: patternId };
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       ...state,
@@ -129,6 +165,9 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       toggleBookmarkedConcept,
       setDepthPreference,
       setConfidence,
+      setActiveWorkloadProfile,
+      setActiveDataMovementStage,
+      setActiveTrafficPattern,
     }),
     [
       state,
@@ -139,6 +178,9 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       toggleBookmarkedConcept,
       setDepthPreference,
       setConfidence,
+      setActiveWorkloadProfile,
+      setActiveDataMovementStage,
+      setActiveTrafficPattern,
     ]
   );
 

@@ -70,4 +70,7 @@ export interface LearningState {
   bookmarkedConcepts: string[];
   selectedDepthPreference: LearningDepth;
   selfRatedConfidence: Record<string, number>;
+  activeWorkloadProfile?: string;
+  activeDataMovementStage?: string;
+  activeTrafficPattern?: string;
 }

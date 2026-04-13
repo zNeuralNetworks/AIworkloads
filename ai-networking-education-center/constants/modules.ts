@@ -2,19 +2,29 @@
 import { AppConfig, HomeModule } from '../types';
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
-  heroLabel: "Architecture Decision Reference",
+  heroLabel: "Architecture Reference",
   heroTitle: "Scientific Workflow",
   heroHighlight: "Architecture",
-  heroSubtitle: "An architecture reference layer for understanding how workloads create infrastructure requirements.",
+  heroSubtitle: "Use the decision chain from workload shape to fabric posture, architecture choice, and operational consequence.",
 };
 
 export const DEFAULT_HOME_MODULES: HomeModule[] = [
   {
-    id: 'mod_1', title: "Architecture Patterns", subtitle: "Reference patterns for mapping workflow behavior to topology and design constraints.",
-    iconKey: "Layers", progress: 100, href: "#etherlink", color: "blue"
+    id: 'mod_1', title: "Workload Types", subtitle: "Start by classifying the workload behavior before discussing fabrics, transports, or platforms.",
+    iconKey: "GitMerge", progress: 100, href: "#training-vs-inference", color: "emerald",
+    estimatedMinutes: 8,
+    difficulty: 'Foundation',
+    whyItMatters: 'The safest architectural explanation starts with workload behavior, not protocol vocabulary.',
+    explainOutcome: 'Classify the environment by the traffic behavior and failure signature that actually dominate it.',
+    learningObjectives: [
+      'Spot the dominant workload shape',
+      'Predict what fails first when the profile is misclassified',
+      'Use workload type to frame the next learning step',
+    ],
+    recommendedNextIds: ['concepts', 'load-balancing'],
   },
   {
-    id: 'mod_2', title: "Data Movement", subtitle: "RDMA, RoCEv2, and NVMe-oF primitives that govern workflow data paths.",
+    id: 'mod_2', title: "Data Movement", subtitle: "Find the lifecycle stage that is actually creating infrastructure pressure.",
     iconKey: "Cpu", progress: 45, href: "#concepts", color: "purple",
     estimatedMinutes: 12,
     difficulty: 'Foundation',
@@ -38,7 +48,21 @@ export const DEFAULT_HOME_MODULES: HomeModule[] = [
     ],
   },
   {
-    id: 'mod_3', title: "Transport & Congestion", subtitle: "Transport, flow-control, and congestion tradeoffs across workload profiles.",
+    id: 'mod_3', title: "Communication Patterns", subtitle: "Build intuition for collective, convergent, and skewed traffic geometry.",
+    iconKey: "GitMerge", progress: 70, href: "#load-balancing", color: "blue",
+    estimatedMinutes: 10,
+    difficulty: 'Foundation',
+    whyItMatters: 'Traffic geometry is the missing bridge between workload labels and control-loop decisions.',
+    explainOutcome: 'Explain why all-reduce, all-to-all, convergence, and checkpoint bursts stress the network differently.',
+    learningObjectives: [
+      'Recognize the pattern before choosing a mechanism',
+      'Predict hotspot shape from traffic geometry',
+      'Know which pathing questions come next',
+    ],
+    recommendedNextIds: ['protocols', 'architecture'],
+  },
+  {
+    id: 'mod_4', title: "Transport & Congestion", subtitle: "Transport, flow-control, and congestion tradeoffs across workload profiles.",
     iconKey: "Network", progress: 70, href: "#protocols", color: "indigo",
     estimatedMinutes: 15,
     difficulty: 'Intermediate',
@@ -62,34 +86,15 @@ export const DEFAULT_HOME_MODULES: HomeModule[] = [
     ],
   },
   {
-    id: 'mod_4', title: "Performance Implications", subtitle: "Latency, throughput, tail-risk, and job-completion implications.",
+    id: 'mod_5', title: "Architecture Patterns", subtitle: "Map workload behavior to topology posture and design constraints.",
+    iconKey: "Layers", progress: 80, href: "#etherlink", color: "cyan"
+  },
+  {
+    id: 'mod_6', title: "Performance Implications", subtitle: "Interpret latency, throughput, and tail-risk as evidence of design posture.",
     iconKey: "Activity", progress: 30, href: "#performance", color: "red"
   },
   {
-    id: 'mod_5', title: "Platform Considerations", subtitle: "Buffering, queueing, silicon behavior, and chassis trade-offs.",
+    id: 'mod_7', title: "Platform Considerations", subtitle: "Match buffering, radix, and silicon behavior to the real design constraint.",
     iconKey: "Server", progress: 15, href: "#hardware", color: "cyan"
-  },
-  {
-    id: 'mod_6', title: "Workload Types", subtitle: "Training, inference, and scientific compute workload signatures.",
-    iconKey: "GitMerge", progress: 85, href: "#hpc", color: "emerald",
-    estimatedMinutes: 8,
-    difficulty: 'Foundation',
-    whyItMatters: 'The safest way to explain infrastructure requirements is to begin with workload behavior rather than protocol vocabulary.',
-    explainOutcome: 'Explain why training, inference, and scientific workflows produce different congestion and topology priorities.',
-    learningObjectives: [
-      'Spot the dominant traffic shape',
-      'Separate latency-sensitive from throughput-dominant behavior',
-      'Use workload shape to frame a customer conversation',
-    ],
-    recommendedNextIds: ['concepts', 'protocols'],
-    entryScenarios: [
-      {
-        title: 'Customer discovery call',
-        prompt: 'You need to quickly classify whether the environment behaves like synchronized training, inference, or checkpoint-heavy scientific compute.',
-        dominantSignal: 'Workload type determines traffic shape before platform choices',
-        networkBehavior: 'The fabric must match synchronization and tolerance patterns',
-        infrastructureDecision: 'Start with workload classification before discussing transports or hardware',
-      },
-    ],
   },
 ];

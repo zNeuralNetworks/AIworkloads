@@ -17,7 +17,8 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
         {/* Discreet Admin Trigger - No Hint */}
         <button 
           onClick={onAdminClick}
-          className="absolute bottom-4 right-4 text-slate-800 hover:text-slate-600 transition-colors p-2"
+          className="absolute bottom-4 right-4 text-slate-800 hover:text-slate-600 transition-colors p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70"
+          aria-label="Open admin settings"
         >
           <Settings size={14} />
         </button>

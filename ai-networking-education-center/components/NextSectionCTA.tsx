@@ -12,10 +12,15 @@ const NextSectionCTA: React.FC<Props> = ({ currentId }) => {
     .filter(m => m.page === 'main')
     .sort((a, b) => a.order - b.order);
 
+  const currentModule = mainModules.find((m) => m.id === currentId);
   const currentIdx = mainModules.findIndex(m => m.id === currentId);
-  const nextModule = currentIdx >= 0 && currentIdx < mainModules.length - 1
-    ? mainModules[currentIdx + 1]
-    : null;
+  const nextModule =
+    (currentModule?.recommendedNextIds || [])
+      .map((id) => mainModules.find((module) => module.id === id))
+      .find(Boolean) ||
+    (currentIdx >= 0 && currentIdx < mainModules.length - 1
+      ? mainModules[currentIdx + 1]
+      : null);
 
   if (!nextModule) return null;
 
@@ -28,7 +33,9 @@ const NextSectionCTA: React.FC<Props> = ({ currentId }) => {
           className="group flex items-center justify-between gap-4 bg-white/3 hover:bg-white/5 border border-white/5 hover:border-white/10 rounded-2xl px-6 py-4 transition-all"
         >
           <div className="min-w-0">
-            <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-0.5">Next</div>
+            <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-0.5">
+              {currentModule?.recommendedNextIds?.length ? 'Recommended Next' : 'Next'}
+            </div>
             <div className="text-white font-semibold text-sm">{nextModule.title}</div>
             {nextModule.subtitle && (
               <div className="text-xs text-slate-500 mt-0.5 truncate">{nextModule.subtitle}</div>

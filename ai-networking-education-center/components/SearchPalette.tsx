@@ -187,12 +187,17 @@ const SearchPalette: React.FC<SearchPaletteProps> = ({ palette }) => {
                   ref={inputRef}
                   type="text"
                   placeholder="Search sections or glossary terms…"
-                  className="flex-1 bg-transparent text-slate-100 placeholder-slate-500 text-sm outline-none"
+                  className="flex-1 bg-transparent text-slate-100 placeholder-slate-500 text-sm outline-none focus-visible:ring-0"
+                  aria-label="Search sections and glossary terms"
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                 />
-                <button onClick={close} className="text-slate-500 hover:text-slate-300 transition-colors">
+                <button
+                  onClick={close}
+                  className="text-slate-500 hover:text-slate-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70"
+                  aria-label="Close search"
+                >
                   <X size={16} />
                 </button>
               </div>

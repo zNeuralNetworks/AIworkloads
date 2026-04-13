@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Search } from 'lucide-react';
 import { NAVIGATION } from '../constants';
@@ -27,6 +27,7 @@ const Navigation: React.FC<NavigationProps> = ({ onSearchClick }) => {
   const { pathname } = useLocation();
   const isOnSubpage = pathname !== '/';
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const scrollIds = NAVIGATION.filter(n => !n.href).map(n => n.id);
   const scrollActiveId = useActiveSection(scrollIds);
@@ -40,9 +41,16 @@ const Navigation: React.FC<NavigationProps> = ({ onSearchClick }) => {
     return (scrollActiveId || 'intro') === item.id;
   };
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 320);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const renderNavItem = (item: NavItem, onSelect?: () => void) => {
     const isActive = isItemActive(item);
-    const commonClass = "group relative px-4 py-3 rounded-full transition-colors flex items-center justify-center shrink-0 z-10";
+    const commonClass = "group relative px-3.5 py-2.5 rounded-full transition-colors flex items-center justify-center shrink-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F1117]";
 
     const iconContent = (
       <>
@@ -93,7 +101,7 @@ const Navigation: React.FC<NavigationProps> = ({ onSearchClick }) => {
 
   const renderMobileSheetItem = (item: NavItem) => {
     const isActive = isItemActive(item);
-    const commonClass = "flex flex-col items-center gap-2 p-4 rounded-2xl transition-colors";
+    const commonClass = "flex flex-col items-center gap-2 rounded-xl p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70";
     const activeClass = isActive ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-white/5";
 
     const inner = (
@@ -136,17 +144,17 @@ const Navigation: React.FC<NavigationProps> = ({ onSearchClick }) => {
       {isOnSubpage ? (
         <Link
           to="/"
-          className="fixed top-6 left-6 z-50 mix-blend-difference pointer-events-auto"
+          className="fixed top-6 left-6 z-[70] mix-blend-difference pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70"
         >
           <div className="text-xl font-bold tracking-tighter text-white hover:opacity-80 transition-opacity">
             ← Back
           </div>
         </Link>
-      ) : (
+      ) : !scrolled ? (
         <motion.a
           href="#intro"
           onClick={(e) => smoothScrollTo(e, '#intro')}
-          className="fixed top-6 left-6 z-50 mix-blend-difference pointer-events-auto"
+          className="fixed top-6 left-6 z-[70] mix-blend-difference pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -155,23 +163,23 @@ const Navigation: React.FC<NavigationProps> = ({ onSearchClick }) => {
             Scientific Workflow Architecture
           </div>
         </motion.a>
-      )}
+      ) : null}
 
       {/* 2a. Floating Bottom Dock — md+ only */}
       <motion.div
-        className="hidden md:block fixed bottom-8 left-1/2 z-50 w-auto max-w-[90vw] pointer-events-auto"
+        className="group/nav hidden md:block fixed bottom-[calc(env(safe-area-inset-bottom)+0.25rem)] left-1/2 z-50 w-auto max-w-[90vw] pointer-events-auto"
         initial={{ y: 100, x: "-50%", opacity: 0 }}
         animate={{ y: 0, x: "-50%", opacity: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
       >
-        <div className="bg-[#161b22]/80 backdrop-blur-xl border border-white/10 rounded-full p-2 shadow-2xl flex items-center gap-2 overflow-x-auto hide-scrollbar">
+        <div className="translate-y-9 scale-[0.92] bg-[#161b22]/78 opacity-60 backdrop-blur-xl border border-white/10 rounded-full p-1.5 shadow-2xl flex items-center gap-1.5 overflow-x-auto hide-scrollbar transition-[transform,opacity,background-color] duration-200 ease-out group-hover/nav:translate-y-0 group-hover/nav:scale-100 group-hover/nav:opacity-100 group-focus-within/nav:translate-y-0 group-focus-within/nav:scale-100 group-focus-within/nav:opacity-100 group-hover/nav:bg-[#161b22]/92 group-focus-within/nav:bg-[#161b22]/92">
           {NAVIGATION.map((item) => renderNavItem(item))}
           {onSearchClick && (
             <>
               <div className="w-px h-6 bg-white/10 shrink-0 mx-1" />
               <button
                 onClick={onSearchClick}
-                className="group relative px-3 py-2 rounded-full transition-colors flex items-center gap-1.5 text-slate-400 hover:text-white shrink-0"
+                className="group relative px-3 py-2 rounded-full transition-colors flex items-center gap-1.5 text-slate-400 hover:text-white shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F1117]"
                 aria-label="Search (⌘K)"
               >
                 <Search size={16} />
@@ -184,7 +192,7 @@ const Navigation: React.FC<NavigationProps> = ({ onSearchClick }) => {
 
       {/* 2b. Mobile: single hamburger button — <md only */}
       <motion.button
-        className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-14 h-14 rounded-full bg-[#161b22]/80 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center justify-center pointer-events-auto"
+        className="md:hidden fixed bottom-[calc(env(safe-area-inset-bottom)-2.15rem)] left-1/2 -translate-x-1/2 z-50 h-12 w-16 rounded-t-2xl rounded-b-none bg-[#161b22]/82 backdrop-blur-xl border border-b-0 border-white/10 shadow-2xl flex items-start justify-center pt-1.5 pointer-events-auto focus-visible:bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] focus-visible:rounded-full focus-visible:border-b focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70"
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
@@ -208,7 +216,7 @@ const Navigation: React.FC<NavigationProps> = ({ onSearchClick }) => {
             />
             {/* Sheet */}
             <motion.div
-              className="md:hidden fixed inset-x-0 bottom-0 z-[61] bg-[#161b22] border-t border-white/10 rounded-t-2xl p-6 shadow-2xl"
+              className="md:hidden fixed inset-x-0 bottom-0 z-[61] max-h-[78svh] overflow-y-auto overscroll-contain bg-[#161b22] border-t border-white/10 rounded-t-2xl p-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] shadow-2xl"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -218,7 +226,7 @@ const Navigation: React.FC<NavigationProps> = ({ onSearchClick }) => {
                 <span className="text-sm font-mono text-slate-400">Navigate</span>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="text-slate-400 hover:text-white transition-colors"
+                  className="text-slate-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70"
                   aria-label="Close navigation"
                 >
                   <X size={20} />

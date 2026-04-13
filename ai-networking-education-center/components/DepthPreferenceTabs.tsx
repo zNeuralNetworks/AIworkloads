@@ -17,7 +17,7 @@ const DepthPreferenceTabs: React.FC<DepthPreferenceTabsProps> = ({ value, onChan
   return (
     <div className="rounded-2xl border border-white/5 bg-[#161b22] p-2">
       <div className="mb-3 px-3 pt-2 text-xs font-mono uppercase tracking-[0.22em] text-slate-500">
-        Learning Depth
+        Reference Depth
       </div>
       <div className="grid gap-2 md:grid-cols-4">
         {DEPTH_OPTIONS.map((option) => {

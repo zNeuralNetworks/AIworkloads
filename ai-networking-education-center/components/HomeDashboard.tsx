@@ -69,7 +69,7 @@ const DashboardCard: React.FC<{
                   {progress}%
               </span>
           </div>
-          <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">Coverage Focus</span>
+          <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">Decision Lens</span>
         </div>
         <motion.div 
           whileHover={{ x: 3 }}
@@ -143,13 +143,13 @@ const HomeDashboard: React.FC = () => {
         >
            <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-slate-500">
               <a href="#performance" onClick={(e) => smoothScrollTo(e, '#performance')} className="flex items-center gap-2 hover:text-blue-400 transition-colors cursor-pointer z-30">
-                <Zap size={16} /> Ultra Low Latency
+                <Zap size={16} /> Latency & Tail Risk
               </a>
               <a href="#protocols" onClick={(e) => smoothScrollTo(e, '#protocols')} className="flex items-center gap-2 hover:text-indigo-400 transition-colors cursor-pointer z-30">
-                <Network size={16} /> Lossless Fabric
+                <Network size={16} /> Lossless Control Loops
               </a>
               <a href="#etherlink" onClick={(e) => smoothScrollTo(e, '#etherlink')} className="flex items-center gap-2 hover:text-cyan-400 transition-colors cursor-pointer z-30">
-                <Activity size={16} /> 100% Non-Blocking
+                <Activity size={16} /> Topology & Path Symmetry
               </a>
            </div>
         </motion.div>

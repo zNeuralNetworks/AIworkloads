@@ -21,7 +21,7 @@ export const PRODUCTS: ProductData[] = [
     ),
     specs: [
       claim(`${claimTextById('product7060Capacity')} Capacity`, PRODUCT_DATASHEET_SOURCE),
-      claim('Tomahawk5', PRODUCT_DATASHEET_SOURCE),
+      claim('High-radix fixed platform', PRODUCT_DATASHEET_SOURCE),
       claim('800G OSFP', PRODUCT_DATASHEET_SOURCE),
       claim('LPO Support', PRODUCT_DATASHEET_SOURCE),
     ],
@@ -42,29 +42,29 @@ export const PRODUCTS: ProductData[] = [
       },
       {
         label: 'Silicon',
-        value: 'Tomahawk5',
-        subtext: 'Latest Broadcom chipset architecture',
+        value: 'High-radix fixed platform',
+        subtext: 'Current-generation fixed switching architecture',
         iconKey: 'Cpu',
       },
     ],
     variants: [
       {
         name: '7060X6-64PE',
-        chip: 'Tomahawk',
+        chip: 'High-radix fixed',
         capacity: claimTextById('product7060Capacity'),
         ports: claimTextById('product7060Ports64x800g'),
         formFactor: '2RU',
       },
       {
         name: '7060X6-64PE-B',
-        chip: 'Tomahawk',
+        chip: 'High-radix fixed',
         capacity: claimTextById('product7060Capacity'),
         ports: claimTextById('product7060Ports64x800g'),
         formFactor: '2RU',
       },
       {
         name: '7060X6-32PE',
-        chip: 'Tomahawk',
+        chip: 'High-radix fixed',
         capacity: claimTextById('product7060CapacityHalf'),
         ports: claimTextById('product7060Ports32x800g'),
         formFactor: '1RU',
@@ -81,7 +81,7 @@ export const PRODUCTS: ProductData[] = [
       PRODUCT_DATASHEET_SOURCE
     ),
     specs: [
-      claim('Jericho Silicon', PRODUCT_DATASHEET_SOURCE),
+      claim('Deep-buffer modular platform', PRODUCT_DATASHEET_SOURCE),
       claim(`${claimTextById('product7800CapacityTbps')} Capacity`, PRODUCT_DATASHEET_SOURCE),
       claim(`${claimTextById('product7800Ports576x800g')} Ports`, PRODUCT_DATASHEET_SOURCE),
       claim('Deep Buffers', PRODUCT_DATASHEET_SOURCE),
@@ -202,7 +202,7 @@ export const PRODUCTS: ProductData[] = [
     variants: [
       {
         name: 'DES Leaf',
-        chip: 'Jericho',
+        chip: 'Deep-buffer modular',
         capacity: 'N/A',
         ports: claimTextById('product7700Ports18x800gHost'),
         formFactor: 'Fixed',
@@ -233,7 +233,7 @@ export const PRODUCTS: ProductData[] = [
       PRODUCT_DATASHEET_SOURCE
     ),
     specs: [
-      claim('Jericho 2', PRODUCT_DATASHEET_SOURCE),
+      claim('Deep-buffer fixed platform', PRODUCT_DATASHEET_SOURCE),
       claim('Deep Buffers', PRODUCT_DATASHEET_SOURCE),
       getPerformanceClaim('product7280Spec100g400g'),
       claim('VOQ Architecture', PRODUCT_DATASHEET_SOURCE),
@@ -258,14 +258,14 @@ export const PRODUCTS: ProductData[] = [
     variants: [
       {
         name: '7280CR3',
-        chip: 'Jericho 2',
+        chip: 'Deep-buffer fixed',
         capacity: claimTextById('product7280Capacity96t'),
         ports: 'Fixed 400G',
         formFactor: '1RU/2RU',
       },
       {
         name: '7280SR3',
-        chip: 'Jericho 2',
+        chip: 'Deep-buffer fixed',
         capacity: 'Various',
         ports: claimTextById('product7280Ports100g25g'),
         formFactor: '1RU',
@@ -282,7 +282,7 @@ export const PRODUCTS: ProductData[] = [
       PRODUCT_DATASHEET_SOURCE
     ),
     specs: [
-      claim('Jericho 2C+', PRODUCT_DATASHEET_SOURCE),
+      claim('Deep-buffer fixed platform with enhanced telemetry', PRODUCT_DATASHEET_SOURCE),
       claim('Algorithmic ACLs', PRODUCT_DATASHEET_SOURCE),
       getPerformanceClaim('product7280aSpec400g'),
       claim('In-band Telemetry', PRODUCT_DATASHEET_SOURCE),
@@ -307,49 +307,49 @@ export const PRODUCTS: ProductData[] = [
     variants: [
       {
         name: '7280DR3A-54',
-        chip: 'Jericho 2C+',
+        chip: 'Deep-buffer fixed (enhanced telemetry)',
         capacity: 'High Scale',
         ports: '400G Optimized',
         formFactor: 'Fixed',
       },
       {
         name: '7280DR3A-36',
-        chip: 'Jericho 2C+',
+        chip: 'Deep-buffer fixed (enhanced telemetry)',
         capacity: claimTextById('product7280aCapacity144t'),
         ports: claimTextById('product7280aPorts36x400g'),
         formFactor: '1RU',
       },
       {
         name: '7280CR3A-24D12',
-        chip: 'Jericho 2C+',
+        chip: 'Deep-buffer fixed (enhanced telemetry)',
         capacity: 'Mix',
         ports: claimTextById('product7280aPorts24x100g12x400g'),
         formFactor: '1RU',
       },
       {
         name: '7280CR3A-48D6',
-        chip: 'Jericho 2C+',
+        chip: 'Deep-buffer fixed (enhanced telemetry)',
         capacity: 'Mix',
         ports: claimTextById('product7280aPorts48x100g6x400g'),
         formFactor: '1RU',
       },
       {
         name: '7280CR3A-72',
-        chip: 'Jericho 2C+',
+        chip: 'Deep-buffer fixed (enhanced telemetry)',
         capacity: claimTextById('product7280aCapacity72t'),
         ports: claimTextById('product7280aPorts72x100g'),
         formFactor: '2RU',
       },
       {
         name: '7280CR3A-32S',
-        chip: 'Jericho 2C+',
+        chip: 'Deep-buffer fixed (enhanced telemetry)',
         capacity: claimTextById('product7280aCapacity32t'),
         ports: claimTextById('product7280aPorts32x100g'),
         formFactor: '1RU',
       },
       {
         name: '7280SR3A-48YC8',
-        chip: 'Jericho 2C+',
+        chip: 'Deep-buffer fixed (enhanced telemetry)',
         capacity: 'Low Latency',
         ports: claimTextById('product7280aPorts48x25g8x100g'),
         formFactor: '1RU',

@@ -16,47 +16,22 @@ import {
 } from 'lucide-react';
 import { useProtocolSimulation } from '../hooks/useProtocolSimulation';
 import DepthPreferenceTabs from './DepthPreferenceTabs';
-import ScenarioDecisionCards from './ScenarioDecisionCards';
 import KnowledgeCheckCard from './KnowledgeCheckCard';
 import InfrastructureImplicationsPanel from './InfrastructureImplicationsPanel';
 import RunbookLinksPanel from './RunbookLinksPanel';
 import SoWhatCallout from './SoWhatCallout';
 import TelemetryWatchPanel from './TelemetryWatchPanel';
+import ComparisonCards from './ComparisonCards';
+import QuickKnowledgeCheck from './QuickKnowledgeCheck';
+import CongestionSequenceStrip from './CongestionSequenceStrip';
 import { useLearning } from '../contexts/LearningContext';
-import type { InfrastructureImplication, KnowledgeCheck, LearningScenario, RunbookReference, TelemetryWatchpoint } from '../types';
+import type { InfrastructureImplication, KnowledgeCheck, RunbookReference, TelemetryWatchpoint } from '../types';
 
 const protocolColor = (color: string) => {
   if (color === 'blue') return { tab: 'bg-blue-600', badge: 'bg-blue-900/30 text-blue-400', icon: 'bg-blue-500/10 text-blue-400' };
   if (color === 'purple') return { tab: 'bg-purple-600', badge: 'bg-purple-900/30 text-purple-400', icon: 'bg-purple-500/10 text-purple-400' };
   return { tab: 'bg-green-600', badge: 'bg-green-900/30 text-green-400', icon: 'bg-green-500/10 text-green-400' };
 };
-
-const PROTOCOL_SCENARIOS: LearningScenario[] = [
-  {
-    title: '32-node all-reduce cluster',
-    prompt:
-      'A training cluster shows intermittent step-time variance, queue pressure, and occasional pause events under synchronized load.',
-    dominantSignal: 'Collective traffic is magnifying timing and path imbalance',
-    networkBehavior: 'Early ECN response and balanced path distribution matter before pause rescue',
-    infrastructureDecision: 'Tune congestion and load balancing posture before assuming bandwidth is the problem',
-  },
-  {
-    title: 'Customer asks whether UET removes the need for congestion design',
-    prompt:
-      'You need a crisp answer that is accurate for architects and still usable in a technical sales conversation.',
-    dominantSignal: 'Transport model changes, but disciplined pathing and control posture still matter',
-    networkBehavior: 'Loss tolerance is not the same thing as “the fabric no longer matters”',
-    infrastructureDecision: 'Explain how the control loop changes without overselling protocol magic',
-  },
-  {
-    title: 'Pause storms during bursty restart activity',
-    prompt:
-      'The environment behaves well most of the time, but recovery windows trigger widespread pause and inconsistent job restart.',
-    dominantSignal: 'The congestion loop is reacting too late under burst conditions',
-    networkBehavior: 'PFC is acting as dominant control rather than brief backstop',
-    infrastructureDecision: 'Review thresholds, queue mapping, and containment before adding more complexity',
-  },
-];
 
 const PROTOCOL_CHECK: KnowledgeCheck = {
   id: 'protocols-congestion-check',
@@ -94,8 +69,8 @@ const PROTOCOL_MODULE_IMPLICATIONS: InfrastructureImplication[] = [
     detail: 'Step-time variance, incast hot spots, and pause-dominated recovery windows usually show up before a flat bandwidth benchmark looks wrong.',
   },
   {
-    label: 'What to explain clearly',
-    detail: 'Protocol choice changes the control model, but it does not remove the need for path discipline, telemetry, and workload-aware congestion posture.',
+    label: 'What to tune first',
+    detail: 'Start with the ECN marking threshold — set it per workload timing class before touching DCQCN sender-reaction timers or PFC pause scope. The congestion procedure in this module gives the workload-specific baseline thresholds.',
   },
 ];
 
@@ -140,6 +115,84 @@ const PROTOCOL_RUNBOOKS: RunbookReference[] = [
   },
 ];
 
+const PROTOCOL_MICRO_CHECK: KnowledgeCheck = {
+  id: 'protocols-loop-order-check',
+  prompt: 'In a healthy congestion-control story, what should appear before sustained pause?',
+  correctOptionId: 'ecn-first',
+  options: [
+    {
+      id: 'ecn-first',
+      label: 'ECN marks and endpoint reaction',
+      rationale: 'Correct. That sequence supports a usable mental model of congestion as an early-feedback loop rather than an emergency brake.',
+    },
+    {
+      id: 'pause-first',
+      label: 'PFC pause dominating the queue',
+      rationale: 'That indicates PFC is still being read as the primary control loop, which is the wrong causal model.',
+    },
+  ],
+};
+
+const CONTROL_LOOP_COMPARISON = [
+  {
+    title: 'ECN Leading',
+    subtitle: 'Healthy early feedback',
+    summary: 'Marks appear before the queue is exhausted, endpoints react, and pause stays exceptional.',
+    bullets: ['Good mental model: early signal', 'Implies bounded queue growth'],
+    tone: 'blue' as const,
+  },
+  {
+    title: 'PFC Dominating',
+    subtitle: 'Late rescue mode',
+    summary: 'Pause becomes the visible control mechanism because the loop is already late.',
+    bullets: ['Good warning sign', 'Usually means thresholds or endpoint response need work'],
+    tone: 'red' as const,
+  },
+  {
+    title: 'UET Promise',
+    subtitle: 'Changed transport model',
+    summary: 'Loss tolerance changes transport assumptions, but it does not remove the need for good pathing and control posture.',
+    bullets: ['Do not oversell protocol magic', 'Still ask what fails first'],
+    tone: 'emerald' as const,
+  },
+];
+
+const PROTOCOL_LEARNING_SEQUENCE = [
+  {
+    step: '1',
+    title: 'Start from the symptom',
+    detail: 'Variance, pause spread, or incast tells you what congestion question to ask first.',
+  },
+  {
+    step: '2',
+    title: 'Read the control-loop order',
+    detail: 'ECN should appear before sustained pause. Endpoint response should happen before link-level rescue dominates.',
+  },
+  {
+    step: '3',
+    title: 'Locate where the loop breaks',
+    detail: 'Identify whether the failure is in thresholds, pathing, endpoint reaction, or hotspot geometry.',
+  },
+  {
+    step: '4',
+    title: 'Only then compare transports',
+    detail: 'RoCEv2 and UET are meaningful after the control model is clear.',
+  },
+];
+
+function protocolForPattern(patternId?: string): string {
+  switch (patternId) {
+    case 'all-reduce':
+    case 'checkpoint-burst':
+      return 'roce';
+    case 'all-to-all':
+    case 'moe-dispatch':
+      return 'load-balancing';
+    default:
+      return 'roce';
+  }
+}
+
 const ProtocolsSection: React.FC = () => {
   const { protocolConcepts } = useData();
   const {
@@ -148,8 +201,9 @@ const ProtocolsSection: React.FC = () => {
     markVisited,
     toggleMastered,
     masteredModules,
+    activeTrafficPattern,
   } = useLearning();
-  const [activeTab, setActiveTab] = useState('roce');
+  const [activeTab, setActiveTab] = useState(protocolForPattern(activeTrafficPattern));
   const {
     uiState,
     isPlaying,
@@ -171,6 +225,11 @@ const ProtocolsSection: React.FC = () => {
     markVisited('protocols');
   }, [markVisited]);
 
+  useEffect(() => {
+    const suggestedTab = protocolForPattern(activeTrafficPattern);
+    setActiveTab((prev) => (prev === suggestedTab ? prev : suggestedTab));
+  }, [activeTrafficPattern]);
+
   return (
     <section id="protocols" className="py-24 bg-slate-900 relative overflow-hidden">
       {/* Background decoration */}
@@ -190,10 +249,11 @@ const ProtocolsSection: React.FC = () => {
         </div>
 
         <div className="mb-12">
-          <ScenarioDecisionCards
-            title="Use the workload symptom to choose the transport question"
-            intro="This module should train a simple behavior: first classify what the congestion symptom is telling you, then decide whether the lesson is about ECN, PFC, load balancing, or transport model differences."
-            scenarios={PROTOCOL_SCENARIOS}
+          <ComparisonCards
+            eyebrow="Control Loop By Contrast"
+            title="Use contrast to reduce transport complexity"
+            intro="The reference does not require every transport detail at once. A few strong contrasts explain what a healthy loop looks like and what a broken one looks like."
+            items={CONTROL_LOOP_COMPARISON}
           />
         </div>
 
@@ -217,39 +277,33 @@ const ProtocolsSection: React.FC = () => {
 
           <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
             <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-emerald-400">
-              Learning Frame
+              Core Mental Model
             </div>
+            <h3 className="mb-4 text-2xl font-bold text-white">Teach the congestion loop in a fixed order</h3>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  Quick take
+              {PROTOCOL_LEARNING_SEQUENCE.map((item) => (
+                <div key={item.step} className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
+                  <div className="mb-2 flex items-center gap-3">
+                    <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 text-[11px] font-mono text-blue-300">
+                      Step {item.step}
+                    </div>
+                    <div className="text-sm font-semibold text-white">{item.title}</div>
+                  </div>
+                  <p className="text-sm leading-relaxed text-slate-300">{item.detail}</p>
                 </div>
-                <p className="text-sm leading-relaxed text-slate-300">
-                  RoCEv2 requires disciplined congestion behavior, and UET changes the transport control model but not the need for explicit fabric design.
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  What you should leave with
-                </div>
-                <p className="text-sm leading-relaxed text-slate-300">
-                  You should be able to explain what signal should appear first, what that implies,
-                  and which tuning or design question should come next.
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5 md:col-span-2">
-                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  Depth guidance
-                </div>
-                <p className="text-sm leading-relaxed text-slate-300">
-                  Use <strong className="text-white">Quick take</strong> to orient the conversation,
-                  <strong className="text-white"> How it works</strong> for the control-loop model,
-                  <strong className="text-white"> Design implication</strong> for telemetry and tuning posture,
-                  and <strong className="text-white">Expert depth</strong> when you need the detailed procedure.
-                </p>
-              </div>
+              ))}
             </div>
           </div>
+        </div>
+
+        {activeTrafficPattern && (
+          <div className="mb-12 rounded-2xl border border-blue-500/15 bg-blue-500/10 p-4 text-sm text-blue-100">
+            This module is inheriting the active traffic-pattern lens from the earlier learning flow. The default protocol view is biased toward the kind of congestion question that pattern usually creates.
+          </div>
+        )}
+
+        <div className="mb-12">
+          <QuickKnowledgeCheck check={PROTOCOL_MICRO_CHECK} moduleId="protocols" />
         </div>
 
         {/* Tab Controls */}
@@ -656,27 +710,12 @@ const ProtocolsSection: React.FC = () => {
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-white/5 bg-[#161b22] p-7">
-              <div className="text-xs font-mono uppercase tracking-[0.22em] text-blue-400 mb-4">
-                What To Learn
-              </div>
-              <div className="space-y-4 text-sm leading-relaxed text-slate-300">
-                <p>
-                  <GlossaryTerm term="ECN">ECN</GlossaryTerm> is a pre-loss signal. It should show up
-                  before the queue reaches the red line, giving the sender time to react.
-                </p>
-                <p>
-                  <GlossaryTerm term="PFC">PFC</GlossaryTerm> is not the main control loop. It is the
-                  emergency no-drop mechanism that prevents immediate loss while the endpoint feedback
-                  loop catches up.
-                </p>
-                <p>
-                  If your real fabric shows sustained pause with weak or absent ECN marks, tune queue
-                  mapping, threshold posture, and endpoint response before assuming the network simply
-                  needs more bandwidth.
-                </p>
-              </div>
-            </div>
+            <CongestionSequenceStrip
+              ecnActive={ecnActive}
+              pfcActive={pfcActive}
+              senderPaused={senderPaused}
+              bufferLevel={bufferLevel}
+            />
 
             <div className="rounded-2xl border border-white/5 bg-[#161b22] p-7">
               <div className="text-xs font-mono uppercase tracking-[0.22em] text-blue-400 mb-4">
@@ -777,18 +816,17 @@ const ProtocolsSection: React.FC = () => {
           </div>
         )}
 
-        <div className="mb-16">
+        <div className="mb-16 grid gap-6 xl:grid-cols-2">
           <TelemetryWatchPanel
-            title="Congestion telemetry baseline"
-            intro="These watchpoints turn transport discussion into observable behavior. If these signals are missing, the design conversation is still too abstract."
+            title="Apply the control-loop model with telemetry"
+            eyebrow="Apply This"
+            intro="These watchpoints make the transport conversation observable. If these signals are missing, the model is still too abstract."
             items={PROTOCOL_TELEMETRY}
           />
-        </div>
-
-        <div className="mb-16">
           <RunbookLinksPanel
             title="Operational follow-through"
-            intro="When transport and congestion posture turn into an incident, these runbooks are the next useful operational paths."
+            eyebrow="Apply This"
+            intro="When transport and congestion posture turn into an incident, these runbooks are the next useful paths."
             items={PROTOCOL_RUNBOOKS}
           />
         </div>
@@ -812,13 +850,11 @@ const ProtocolsSection: React.FC = () => {
 
           <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
             <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-emerald-300">
-              Self-check
+              Transfer Prompt
             </div>
-            <h3 className="mb-3 text-2xl font-bold text-white">What fails first if this is designed incorrectly?</h3>
+            <h3 className="mb-3 text-2xl font-bold text-white">Next decision</h3>
             <p className="mb-5 text-sm leading-relaxed text-slate-300">
-              Usually the clean benchmark does not fail first. The early warning is often variance,
-              pause spread, incast hot spots, or recovery behavior that tells you the congestion loop
-              is wrong for the workload.
+              Once the control-loop story is clear, the next move is not more acronym memorization. It is deciding whether the root problem is path distribution, workload geometry, or architecture posture. Go next to <span className="font-semibold text-white">Architecture Patterns</span> or back to <span className="font-semibold text-white">Communication Patterns</span> if the hotspot geometry is still unclear.
             </p>
             <button
               onClick={() => toggleMastered('protocols')}
@@ -828,7 +864,7 @@ const ProtocolsSection: React.FC = () => {
                   : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
               }`}
             >
-              {isMastered ? 'Marked as understood' : 'Mark this module as understood'}
+              {isMastered ? 'Transport lens reviewed' : 'Mark transport lens reviewed'}
             </button>
           </div>
         </div>

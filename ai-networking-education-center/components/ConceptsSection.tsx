@@ -36,15 +36,16 @@ import { claimText, hasSourceMetadata } from '../utils/sourceClaims';
 import { CONCEPTS_SECTION_CONTENT } from '../content/concepts';
 import DecisionSimulator from './DecisionSimulator';
 import DepthPreferenceTabs from './DepthPreferenceTabs';
-import ScenarioDecisionCards from './ScenarioDecisionCards';
 import KnowledgeCheckCard from './KnowledgeCheckCard';
 import RunbookLinksPanel from './RunbookLinksPanel';
 import TelemetryWatchPanel from './TelemetryWatchPanel';
+import ComparisonCards from './ComparisonCards';
+import QuickKnowledgeCheck from './QuickKnowledgeCheck';
+import LifecycleStageMap from './LifecycleStageMap';
 import { useLearning } from '../contexts/LearningContext';
 import type {
   DecisionSimulatorResult,
   KnowledgeCheck,
-  LearningScenario,
   RunbookReference,
 } from '../types';
 
@@ -84,33 +85,6 @@ function dependencyLabel(id: string): string {
   }
 }
 
-const DATA_MOVEMENT_SCENARIOS: LearningScenario[] = [
-  {
-    title: '32-node training cluster misses first batch',
-    prompt:
-      'The fabric looks healthy on steady-state counters, but the first batch arrives late and startup feels inconsistent across runs.',
-    dominantSignal: 'Ingest and shuffle stages are destabilizing readiness before collectives even dominate',
-    networkBehavior: 'Queue absorption, path balance, and startup redistribution matter more than generic transport claims',
-    infrastructureDecision: 'Protect ingest and startup posture before tuning collective-phase transports',
-  },
-  {
-    title: 'Checkpoint-heavy workflow degrades recovery time',
-    prompt:
-      'Job time is acceptable until save windows and restart events collide with storage and fabric pressure.',
-    dominantSignal: 'Checkpoint and restore stages dominate operational risk',
-    networkBehavior: 'Storage traffic becomes a first-class fabric event rather than a background subsystem',
-    infrastructureDecision: 'Design for deterministic restart and checkpoint isolation, not just steady-state throughput',
-  },
-  {
-    title: 'Customer says “we use RoCEv2 already”',
-    prompt:
-      'You need to explain why the protocol name alone does not answer whether the design is right for the workload.',
-    dominantSignal: 'Lifecycle stage determines which primitive actually matters',
-    networkBehavior: 'The same acronym implies different pressure points at ingest, shuffle, checkpoint, and restore',
-    infrastructureDecision: 'Frame the conversation around stage-specific failure modes and telemetry, then discuss transports',
-  },
-];
-
 const DATA_MOVEMENT_CHECK: KnowledgeCheck = {
   id: 'concepts-stage-check',
   prompt: 'A cluster only falls apart during checkpoint windows. Which explanation is the most useful first answer?',
@@ -136,6 +110,41 @@ const DATA_MOVEMENT_CHECK: KnowledgeCheck = {
     },
   ],
 };
+
+const DATA_MOVEMENT_MICRO_CHECK: KnowledgeCheck = {
+  id: 'concepts-lens-check',
+  prompt: 'Which lens is usually more useful first when diagnosing a workflow problem?',
+  correctOptionId: 'stage-lens',
+  options: [
+    {
+      id: 'stage-lens',
+      label: 'The lifecycle stage that is late, bursty, or fragile',
+      rationale: 'Correct. Stage-first reasoning is more concrete and supports stronger mental models than acronym-first reasoning.',
+    },
+    {
+      id: 'protocol-lens',
+      label: 'The transport acronym in use',
+      rationale: 'That lens becomes useful later, but it is too abstract to anchor the initial diagnosis well.',
+    },
+  ],
+};
+
+const DATA_MOVEMENT_LENS_COMPARISON = [
+  {
+    title: 'Protocol Lens',
+    subtitle: 'Too abstract too early',
+    summary: 'Starting with RDMA, RoCEv2, or NVMe-oF makes it easy to hold transport labels before understanding where the pressure lives.',
+    bullets: ['Good for expert refreshers', 'Weak for first-pass diagnosis'],
+    tone: 'amber' as const,
+  },
+  {
+    title: 'Stage Lens',
+    subtitle: 'Concrete and diagnosable',
+    summary: 'Starting with ingest, shuffle, checkpoint, or restore gives you a visible event, failure mode, and next question.',
+    bullets: ['Supports telemetry mapping', 'Transfers better into operations'],
+    tone: 'blue' as const,
+  },
+];
 
 const DATA_MOVEMENT_RUNBOOKS: RunbookReference[] = [
   {
@@ -204,13 +213,35 @@ const ENVIRONMENT_MODIFIER_GUIDANCE: Record<
   },
 };
 
+function environmentModifierForProfile(profileId?: string): string {
+  switch (profileId) {
+    case 'pretraining':
+      return 'synchronized-training';
+    case 'finetuning':
+    case 'scientific-hpc':
+      return 'storage-coupled';
+    case 'batch-inference':
+      return 'mixed-scientific';
+    default:
+      return 'storage-coupled';
+  }
+}
+
 const ConceptsSection: React.FC = () => {
   const { coreConcepts } = useData();
-  const { selectedDepthPreference, setDepthPreference, markVisited, toggleMastered, masteredModules } = useLearning();
+  const {
+    selectedDepthPreference,
+    setDepthPreference,
+    markVisited,
+    toggleMastered,
+    masteredModules,
+    activeWorkloadProfile,
+    setActiveDataMovementStage,
+  } = useLearning();
   const concepts = useMemo(() => coreConcepts || [], [coreConcepts]);
   const [selectedSimulatorValues, setSelectedSimulatorValues] = useState<Record<string, string>>({
     stageCondition: DATA_MOVEMENT_STAGES[0]?.id ?? 'ingest',
-    environmentModifier: 'storage-coupled',
+    environmentModifier: environmentModifierForProfile(activeWorkloadProfile),
   });
   const [manualStageId, setManualStageId] = useState<string | null>(null);
   const [refreshersOpen, setRefreshersOpen] = useState(false);
@@ -219,6 +250,17 @@ const ConceptsSection: React.FC = () => {
   useEffect(() => {
     markVisited('concepts');
   }, [markVisited]);
+
+  useEffect(() => {
+    setSelectedSimulatorValues((prev) => {
+      const nextModifier = environmentModifierForProfile(activeWorkloadProfile);
+      if (prev.environmentModifier === nextModifier) {
+        return prev;
+      }
+
+      return { ...prev, environmentModifier: nextModifier };
+    });
+  }, [activeWorkloadProfile]);
 
   const activeStage = useMemo(
     () =>
@@ -270,6 +312,10 @@ const ConceptsSection: React.FC = () => {
   const activeDataMovementResult =
     dataMovementResults.find((result) => result.id === activeStage.id) || dataMovementResults[0];
 
+  useEffect(() => {
+    setActiveDataMovementStage(activeStage.id);
+  }, [activeStage.id, setActiveDataMovementStage]);
+
   const handleSimulatorChange = (promptId: string, optionId: string) => {
     setSelectedSimulatorValues((prev) => ({ ...prev, [promptId]: optionId }));
     if (promptId === 'stageCondition') {
@@ -312,11 +358,11 @@ const ConceptsSection: React.FC = () => {
         </div>
 
         <div className="mb-12">
-          <ScenarioDecisionCards
-            title="Start with the stage that is creating the infrastructure pressure"
-            intro="This module should teach a fast habit: do not start with RDMA, RoCEv2, or NVMe-oF in isolation. Start with the stage that is late, bursty, or operationally fragile, then trace the primitive that matters."
-            scenarios={DATA_MOVEMENT_SCENARIOS}
-          />
+          {activeWorkloadProfile && (
+            <div className="mb-6 rounded-2xl border border-blue-500/15 bg-blue-500/10 p-4 text-sm text-blue-100">
+              This module is picking up the workload lens from the previous step. The active workload profile is shaping the default stage guidance so you do not have to restart the diagnosis from zero.
+            </div>
+          )}
         </div>
 
         <div className="mb-12 grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
@@ -337,42 +383,24 @@ const ConceptsSection: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
-            <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-emerald-400">
-              Before / After Understanding
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  Quick take
-                </div>
-                <p className="text-sm leading-relaxed text-slate-300">
-                  Data movement is a lifecycle problem. Different stages create different dominant
-                  flows, failure signatures, and telemetry priorities.
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
-                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  What you should leave with
-                </div>
-                <p className="text-sm leading-relaxed text-slate-300">
-                  You should be able to explain which stage matters, what fails first there, and
-                  what infrastructure posture follows from that diagnosis.
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5 md:col-span-2">
-                <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                  Depth guidance
-                </div>
-                <p className="text-sm leading-relaxed text-slate-300">
-                  Use <strong className="text-white">Quick take</strong> for plain-language orientation,
-                  <strong className="text-white"> How it works</strong> for the lifecycle model,
-                  <strong className="text-white"> Design implication</strong> for monitoring and architecture posture,
-                  and <strong className="text-white">Expert depth</strong> when you need the protocol refreshers.
-                </p>
-              </div>
-            </div>
-          </div>
+          <ComparisonCards
+            eyebrow="Lens Choice"
+            title="Teach the stage lens before the protocol lens"
+            intro="This is the main chunking move in the module: collapse many transport terms into a smaller and more usable lifecycle model."
+            items={DATA_MOVEMENT_LENS_COMPARISON}
+          />
+        </div>
+
+        <div className="mb-12">
+          <QuickKnowledgeCheck check={DATA_MOVEMENT_MICRO_CHECK} moduleId="concepts" />
+        </div>
+
+        <div className="mb-12">
+          <LifecycleStageMap
+            stages={DATA_MOVEMENT_STAGES}
+            activeStageId={activeStage.id}
+            onStageSelect={setManualStageId}
+          />
         </div>
 
         <div className="mb-12">
@@ -597,12 +625,11 @@ const ConceptsSection: React.FC = () => {
 
           <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
             <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-emerald-300">
-              Self-check
+              Transfer Prompt
             </div>
-            <h3 className="mb-3 text-2xl font-bold text-white">What fails first if this is designed incorrectly?</h3>
+            <h3 className="mb-3 text-2xl font-bold text-white">Next decision</h3>
             <p className="mb-5 text-sm leading-relaxed text-slate-300">
-              Usually not the pristine steady-state benchmark. It is the stage transition: ingest readiness,
-              shuffle imbalance, checkpoint collision, or restore delay.
+              Once the active stage is clear, move to the module that explains the resulting traffic geometry or congestion control question. That usually means <span className="font-semibold text-white">Communication Patterns</span> or <span className="font-semibold text-white">Transport & Congestion</span>, not a jump straight to platform selection.
             </p>
             <button
               onClick={() => toggleMastered('concepts')}
@@ -612,7 +639,7 @@ const ConceptsSection: React.FC = () => {
                   : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
               }`}
             >
-              {isMastered ? 'Marked as understood' : 'Mark this module as understood'}
+              {isMastered ? 'Stage lens reviewed' : 'Mark stage lens reviewed'}
             </button>
           </div>
         </div>

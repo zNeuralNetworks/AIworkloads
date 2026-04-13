@@ -15,17 +15,33 @@
   --accent-success: #10b981;
   --accent-critical: #ef4444;
   --accent-warning: #f59e0b;
+  --sticky-chrome-height: 72px;
+  --bottom-nav-safe: 152px;
 }
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 80px;
+  scroll-padding-top: var(--sticky-chrome-height);
 }
 
 body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-app);
   color: #e2e8f0;
+}
+
+section[id] {
+  scroll-margin-top: var(--sticky-chrome-height);
+  scroll-margin-bottom: var(--bottom-nav-safe);
+}
+
+.nav-safe-bottom {
+  padding-bottom: var(--bottom-nav-safe);
+}
+
+.post-hero-band {
+  padding-top: clamp(4rem, 7vw, 7rem);
+  padding-bottom: clamp(4.5rem, 7vw, 7.5rem);
 }
 
 .hide-scrollbar::-webkit-scrollbar {

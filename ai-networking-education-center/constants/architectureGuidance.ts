@@ -1,8 +1,10 @@
 import type {
   ArchitecturePatternReference,
   DecisionSimulatorPrompt,
+  InfrastructureImplication,
   TelemetryWatchpoint,
 } from '../types';
+import { PLANNER_HANDOFF_DESTINATION } from './plannerHandoff';
 
 export const VENDOR_NEUTRAL_ARCHITECTURE_LENS = [
   {
@@ -142,5 +144,24 @@ export const ARCHITECTURE_DECISION_PROMPTS: DecisionSimulatorPrompt[] = [
       { id: 'strict', label: 'Strict', description: 'One slow path or rail materially harms job time or recovery posture.' },
       { id: 'moderate', label: 'Moderate', description: 'Consistency matters, but phased optimization is acceptable.' },
     ],
+  },
+];
+
+export const ARCHITECTURE_MODULE_IMPLICATIONS: InfrastructureImplication[] = [
+  {
+    label: 'What fails first',
+    detail: 'Rail loss under synchronized collective traffic. Asymmetric topologies show this as step-time variance before any bandwidth metric looks wrong.',
+  },
+  {
+    label: 'What to monitor first',
+    detail: 'Path-group utilization symmetry and per-rail queue depth during collective phases. Asymmetry here exposes whether the topology posture matches the workload geometry.',
+  },
+  {
+    label: 'What to tune first',
+    detail: 'Tune path redundancy assumptions and failure-domain boundaries before adjusting oversubscription ratios or adding capacity. The topology posture should hold under single-rail loss; fix the path design before changing platform scale.',
+  },
+  {
+    label: 'When to hand off',
+    detail: `Once the topology posture is defensible against the active workload profile and failure mode, move to ${PLANNER_HANDOFF_DESTINATION} for quantitative implementation outputs such as radix, lane count, pod scale, and optics.`,
   },
 ];

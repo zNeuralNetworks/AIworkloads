@@ -1,6 +1,7 @@
 import React, { Suspense, useState, useEffect } from 'react';
 import Navigation from '../components/Navigation';
 import HomeDashboard from '../components/HomeDashboard';
+import LearningContextStrip from '../components/LearningContextStrip';
 import TableOfContents from '../components/TableOfContents';
 import Footer from '../components/Footer';
 import FadeIn from '../components/FadeIn';
@@ -20,20 +21,41 @@ import { MODULE_REGISTRY } from '../app/moduleRegistry';
 const MainPage: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const palette = useSearchPalette();
-  const mainModules = MODULE_REGISTRY.filter(m => m.page === 'main');
+  const mainModules = MODULE_REGISTRY
+    .filter((m) => m.page === 'main')
+    .sort((a, b) => a.order - b.order);
 
-  // Scroll to hash anchor on load, retrying after lazy chunks mount
+  // Scroll to hash anchor on load, retrying while lazy chunks and layout settle.
   useEffect(() => {
-    const hash = window.location.hash;
-    if (!hash) return;
-    const id = hash.slice(1);
-    const attempt = () => {
-      const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    let attempts = 0;
+    let timer: ReturnType<typeof window.setTimeout> | null = null;
+
+    const scrollToHash = () => {
+      const hash = window.location.hash;
+      if (!hash) return;
+
+      attempts += 1;
+      const target = document.getElementById(hash.slice(1));
+
+      if (target) {
+        const headerOffset = 72;
+        const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+        window.scrollTo({ top: Math.max(0, top), behavior: attempts <= 2 ? 'auto' : 'smooth' });
+        return;
+      }
+
+      if (attempts < 60) {
+        timer = window.setTimeout(scrollToHash, 100);
+      }
     };
-    attempt();
-    const t = setTimeout(attempt, 600);
-    return () => clearTimeout(t);
+
+    scrollToHash();
+    window.addEventListener('hashchange', scrollToHash);
+
+    return () => {
+      if (timer) window.clearTimeout(timer);
+      window.removeEventListener('hashchange', scrollToHash);
+    };
   }, []);
 
   return (
@@ -47,6 +69,7 @@ const MainPage: React.FC = () => {
       <main>
         {/* Architecture Domain Dashboard */}
         <HomeDashboard />
+        <LearningContextStrip />
 
         {/* Architecture Reference Sections (Scrollable) */}
         {mainModules.map(({ id, component: SectionComponent }) => (

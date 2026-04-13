@@ -66,9 +66,9 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
   const accent = accentFor(activePattern);
 
   return (
-    <div className="mb-20">
+    <div className="nav-safe-bottom">
       <div className="mb-10">
-        <div className="mb-4 text-xs font-mono uppercase tracking-[0.28em] text-violet-500">
+        <div className="mb-4 text-xs font-mono uppercase tracking-[0.16em] text-violet-500">
           Traffic Pattern Lab
         </div>
         <h3 className="mb-4 text-2xl font-bold text-white">
@@ -80,7 +80,7 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
         </p>
       </div>
 
-      <div className="mb-6 grid gap-3 md:grid-cols-5">
+      <div className="mb-10 grid gap-3 md:grid-cols-5">
         {TRAFFIC_PATTERN_LAB.map((pattern) => {
           const isActive = pattern.id === activePattern.id;
           const cardAccent = accentFor(pattern);
@@ -93,7 +93,7 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
                 }
                 onPatternChange?.(pattern.id);
               }}
-              className={`rounded-2xl border p-4 text-left transition-all ${
+              className={`rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/70 ${
                 isActive
                   ? `${cardAccent.border} ${cardAccent.bg}`
                   : 'border-white/5 bg-[#161b22] hover:border-white/15'
@@ -112,10 +112,10 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
-        <div className="rounded-2xl border border-white/5 bg-[#161b22] p-6 md:p-8">
+        <div className="rounded-xl border border-white/5 bg-[#161b22] p-6 md:p-8">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
-              <div className={`mb-2 text-xs font-mono uppercase tracking-[0.22em] ${accent.text}`}>
+              <div className={`mb-2 text-xs font-mono uppercase tracking-[0.16em] ${accent.text}`}>
                 Guided Visual
               </div>
               <h4 className="text-2xl font-bold text-white">{activePattern.title}</h4>
@@ -125,7 +125,7 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
             </div>
           </div>
 
-          <div className="mb-6 rounded-2xl border border-white/5 bg-[#0d1117] p-6">
+          <div className="mb-6 rounded-xl border border-white/5 bg-[#0d1117] p-6">
             <PatternVisual pattern={activePattern} />
           </div>
 
@@ -137,8 +137,8 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/5 bg-[#161b22] p-6 md:p-8">
-          <div className="mb-5 text-xs font-mono uppercase tracking-[0.22em] text-violet-500">
+        <div className="rounded-xl border border-white/5 bg-[#161b22] p-6 md:p-8">
+          <div className="mb-5 text-xs font-mono uppercase tracking-[0.16em] text-violet-500">
             Interpretation
           </div>
 

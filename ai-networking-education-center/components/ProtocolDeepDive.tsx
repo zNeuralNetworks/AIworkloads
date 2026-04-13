@@ -27,7 +27,7 @@ const ProtocolDeepDive: React.FC = () => {
                 <div className="text-purple-500 font-mono text-xs uppercase tracking-widest mb-4">Interactive Lab</div>
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">RoCEv2 Flow Control</h2>
                 <p className="text-slate-400 max-w-2xl text-lg">
-                    Visualize how Priority Flow Control (PFC) prevents packet loss by pausing specific traffic queues during congestion.
+                    Visualize how PFC acts as a lossless backstop when queue pressure exceeds the early congestion-control loop.
                 </p>
             </div>
             

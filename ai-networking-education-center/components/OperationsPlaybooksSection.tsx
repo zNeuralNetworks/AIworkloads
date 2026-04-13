@@ -6,7 +6,7 @@ import {
   OPERATIONS_MIGRATION_ROWS,
   OPERATIONS_CHECKS,
   PLANNER_HANDOFF_LABEL,
-  PLANNER_HANDOFF_STANDARD_TEXT,
+  PLANNER_HANDOFF_SHORT_TEXT,
 } from '../constants';
 
 const SEVERITY_STYLES: Record<string, string> = {
@@ -258,7 +258,7 @@ const OperationsPlaybooksSection: React.FC = () => {
           <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-300 mb-2">{PLANNER_HANDOFF_LABEL}</div>
           <p className="text-sm text-slate-300 leading-relaxed">
             Validate operational implications and risk posture here first, then move to quantitative planning.{' '}
-            {PLANNER_HANDOFF_STANDARD_TEXT}
+            {PLANNER_HANDOFF_SHORT_TEXT}
           </p>
         </div>
       </div>
