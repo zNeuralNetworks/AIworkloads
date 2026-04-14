@@ -73,18 +73,18 @@ const WORKLOAD_CHECK: KnowledgeCheck = {
   options: [
     {
       id: 'wrong-acronym',
-      label: 'The main issue is usually that the team chose the wrong acronym, so the first fix is protocol renaming.',
-      rationale: 'This misses the module’s point. The damaging mistake is choosing the wrong congestion, pathing, and recovery posture for the actual workload shape.',
+      label: 'The team picked the wrong protocol name.',
+      rationale: 'Protocol vocabulary is secondary. The bigger mistake is choosing the wrong congestion, pathing, and recovery posture.',
     },
     {
       id: 'wrong-posture',
-      label: 'The design adopts the wrong posture, and the failure appears first as stragglers, hotspots, restart collapse, or P99 regression rather than average bandwidth loss.',
-      rationale: 'Correct. Misclassification leads to the wrong architecture and operations posture first, not just the wrong vocabulary.',
+      label: 'The design adopts the wrong posture for the real failure mode.',
+      rationale: 'Correct. Misclassification usually appears as stragglers, hotspots, restart collapse, or P99 regression before average bandwidth looks wrong.',
     },
     {
       id: 'only-sizing',
-      label: 'The only likely problem is poor quantitative sizing, so behavior and telemetry matter less than capacity math.',
-      rationale: 'Sizing matters later, but the first error is usually choosing the wrong behavioral model for the workload and therefore the wrong design posture.',
+      label: 'The only problem is quantitative sizing.',
+      rationale: 'Sizing matters later. First, the workload model has to match the behavior and telemetry.',
     },
   ],
 };
@@ -111,21 +111,21 @@ const WORKLOAD_PROFILE_CONTRASTS = [
   {
     title: 'Pre-Training',
     subtitle: 'Barrier-heavy collective behavior',
-    summary: 'Everyone contributes and everyone waits. One slow rail stretches the whole step.',
+    summary: 'One slow rail stretches the whole step.',
     bullets: ['Tail jitter matters more than average latency', 'Path symmetry and early feedback dominate'],
     tone: 'violet' as const,
   },
   {
     title: 'Real-Time Inference',
     subtitle: 'Tail-latency constrained serving',
-    summary: 'The network is part of the response-time budget, so jitter and microbursts matter immediately.',
+    summary: 'Jitter and microbursts consume the response-time budget.',
     bullets: ['P99 matters more than bulk throughput', 'Request-path consistency dominates'],
     tone: 'emerald' as const,
   },
   {
     title: 'Scientific Workflow',
     subtitle: 'Barrier plus restart/storage pressure',
-    summary: 'The architecture must survive both synchronized compute and checkpoint or restart phases.',
+    summary: 'Checkpoint and restart phases can dominate the architecture.',
     bullets: ['Storage coupling can dominate', 'Recovery quality is part of the design'],
     tone: 'amber' as const,
   },
@@ -277,7 +277,7 @@ const TrainingVsInferenceSection: React.FC = () => {
             ? ['Performance Implications', 'Platform Considerations', 'Transport & Congestion']
             : ['Data Movement', 'Communication Patterns', 'Transport & Congestion'],
       runbookLinks: WORKLOAD_RUNBOOKS[profile.id],
-      plannerTrigger: `Once the workload posture is clear, move to planning when the remaining question is quantitative scale, optics, lane count, or fabric tier count.`,
+      plannerTrigger: `Move to planning when the remaining question is quantitative scale, optics, lane count, or fabric tier count.`,
       misconception:
         profile.id === 'pretraining'
           ? 'Do not stop at “AI training.” The design question is whether synchronized collectives and straggler sensitivity dominate the network behavior.'
@@ -348,7 +348,7 @@ const TrainingVsInferenceSection: React.FC = () => {
   };
 
   return (
-    <section id="training-vs-inference" className="nav-safe-bottom border-t border-white/5 bg-slate-900 pt-28">
+    <section id="training-vs-inference" className="workload-module nav-safe-bottom border-t border-white/5 bg-slate-900 pt-28">
       <div className="container mx-auto px-6">
         <div className="mb-16 flex flex-col items-center text-center">
           <div className="mb-4 text-xs font-mono uppercase tracking-[0.18em] text-violet-500">
@@ -356,10 +356,8 @@ const TrainingVsInferenceSection: React.FC = () => {
           </div>
           <h2 className="mb-6 text-3xl font-bold text-white md:text-5xl">Workload Types</h2>
           <p className="max-w-4xl text-lg leading-relaxed text-slate-400">
-            The first architecture decision is not protocol selection. It is identifying what kind of
-            workload the network is actually serving, because traffic direction, burst behavior, and
-            failure signatures change materially across pre-training, fine-tuning, inference, and
-            scientific workflow profiles.
+            Classify the dominant workload behavior before choosing transport, fabric, or platform posture.
+            Traffic direction, burst timing, and first failure change across training, inference, and scientific workflows.
           </p>
         </div>
 
@@ -370,11 +368,11 @@ const TrainingVsInferenceSection: React.FC = () => {
             </div>
             <h3 className="mb-4 text-2xl font-bold text-white">Choose the workload before the fabric posture</h3>
             <p className="mb-5 text-sm leading-relaxed text-slate-300">
-              The common failure is choosing a transport or platform story before proving what kind of workload behavior is actually dominant.
+              The common failure is starting with a transport or platform story before proving the dominant behavior.
             </p>
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-100">
-              <div className="mb-1 font-semibold">What users usually get wrong</div>
-              They treat “training,” “inference,” or “HPC” as enough detail. The useful question is which workload behavior dominates and which failure signature proves it.
+              <div className="mb-1 font-semibold">Common misclassification</div>
+              “Training,” “inference,” and “HPC” are not enough. Identify the dominant behavior and the failure signature that proves it.
             </div>
           </div>
 
@@ -402,8 +400,8 @@ const TrainingVsInferenceSection: React.FC = () => {
         <div className="post-hero-band">
           <ComparisonCards
             eyebrow="Anchor Contrasts"
-            title="Use a few memorable contrasts instead of memorizing every profile at once"
-            intro="Use these anchor cases to separate the dominant workload profiles quickly before moving into transport or platform decisions."
+            title="Use anchor contrasts to classify the workload faster"
+            intro="Separate the dominant profiles before moving into transport or platform decisions."
             items={WORKLOAD_PROFILE_CONTRASTS}
           />
         </div>
@@ -415,8 +413,8 @@ const TrainingVsInferenceSection: React.FC = () => {
         <div className="post-hero-band pt-0">
           <DecisionSimulator
             eyebrow="Workload Decision Simulator"
-            title="Choose workload traits, then see the likely infrastructure consequence"
-            intro="Adjust the traits until the active workload profile matches the behavior you need to explain."
+            title="Classify the workload, then inspect the infrastructure consequence"
+            intro="Change the traits until the active profile matches the behavior in front of you."
             prompts={WORKLOAD_DECISION_PROMPTS}
             selectedValues={selectedValues}
             onChange={handleSimulatorChange}
@@ -434,7 +432,7 @@ const TrainingVsInferenceSection: React.FC = () => {
                 explanation={
                   previousProfileId !== activeResult.id
                     ? `${profileChangeExplanation} The recommendation moved from ${WORKLOAD_PROFILES.find((profile) => profile.id === previousProfileId)?.title || 'the previous profile'} to ${activeProfile.title}.`
-                    : `${profileChangeExplanation} The profile stayed on ${activeProfile.title}, which means this setting reinforces the current classification.`
+                    : `${profileChangeExplanation} The profile stayed on ${activeProfile.title}.`
                 }
               />
             }
@@ -457,7 +455,7 @@ const TrainingVsInferenceSection: React.FC = () => {
             <CompactDisclosure
               eyebrow="Nearby alternatives"
               title="Open the closest competing profiles"
-              summary="Use this when you want to see the nearest boundary cases instead of treating the classifier like a black box."
+              summary="Check the nearest boundary cases."
             >
               <div className="grid gap-3 sm:grid-cols-2">
                 {alternativeProfiles.map(({ profile, distance }) => {
@@ -499,13 +497,13 @@ const TrainingVsInferenceSection: React.FC = () => {
           <TelemetryWatchPanel
             title="Apply this profile with the right telemetry"
             eyebrow="Apply This"
-            intro="Use the active profile to decide what should fail first in counters, not just in architecture language."
+            intro="Use the active profile to decide which counters should fail first."
             items={activeResult.telemetry}
           />
           <RunbookLinksPanel
             title="Bridge from explanation to incident response"
             eyebrow="Apply This"
-            intro="If this workload posture becomes an operational problem, start with the runbooks that match the active profile."
+            intro="Start with runbooks that match the active profile."
             items={activeResult.runbookLinks || []}
           />
         </div>
@@ -518,35 +516,34 @@ const TrainingVsInferenceSection: React.FC = () => {
           />
         </div>
 
-        <div className="post-hero-band grid gap-6 pt-0 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="post-hero-band pt-0">
           <div className="rounded-xl border border-white/10 bg-[#161b22] p-6">
             <div className="mb-2 text-xs font-mono uppercase tracking-[0.16em] text-cyan-300">
-              Explain It Back
+              Decision Closeout
             </div>
-            <h3 className="mb-3 max-w-2xl text-2xl font-bold text-white">Use one sentence that survives after the page is closed</h3>
-            <div className="rounded-lg border border-white/5 bg-[#0d1117] p-5 text-sm leading-relaxed text-slate-300">
-              “First classify the workload behavior, then use that profile to predict the traffic pattern, first failure, and next design question before you talk about transports or platforms.”
+            <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
+              <div>
+                <h3 className="mb-3 text-2xl font-bold text-white">Classify behavior before transports or platforms</h3>
+                <p className="text-sm leading-relaxed text-slate-300">
+                  Use the workload profile to predict traffic pattern, first failure, telemetry, and the next design question.
+                </p>
+              </div>
+              <div>
+                <p className="mb-4 text-sm leading-relaxed text-slate-300">
+                  Next: <span className="font-semibold text-white">Data Movement</span> or <span className="font-semibold text-white">Communication Patterns</span>.
+                </p>
+                <button
+                  onClick={() => toggleMastered('training-vs-inference')}
+                  className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 ${
+                    isMastered
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+                      : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
+                  }`}
+                >
+                  {isMastered ? 'Workload lens reviewed' : 'Mark workload lens reviewed'}
+                </button>
+              </div>
             </div>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-[#161b22] p-6">
-            <div className="mb-2 text-xs font-mono uppercase tracking-[0.16em] text-emerald-300">
-              Transfer Prompt
-            </div>
-            <h3 className="mb-3 text-2xl font-bold text-white">Next decision</h3>
-            <p className="mb-5 text-sm leading-relaxed text-slate-300">
-              If the active profile feels right, the next move is to map where the pressure sits in the lifecycle and what traffic geometry that creates. The next step should usually be <span className="font-semibold text-white">Data Movement</span> or <span className="font-semibold text-white">Communication Patterns</span>, not platform selection.
-            </p>
-            <button
-              onClick={() => toggleMastered('training-vs-inference')}
-              className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 ${
-                isMastered
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
-                  : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
-              }`}
-            >
-              {isMastered ? 'Workload lens reviewed' : 'Mark workload lens reviewed'}
-            </button>
           </div>
         </div>
 
@@ -554,7 +551,10 @@ const TrainingVsInferenceSection: React.FC = () => {
           <KnowledgeCheckCard check={WORKLOAD_CHECK} moduleId="training-vs-inference" />
         </div>
 
-        <SoWhatCallout body="Do not ask whether the environment is 'training or inference' and stop there. Ask which workload profile is dominant, what failure signature matters most, and which telemetry proves the fabric posture is correct before you size anything." />
+        <SoWhatCallout
+          title="Decision Rule"
+          body="Classify the workload profile, failure signature, and telemetry proof before sizing or platform selection."
+        />
       </div>
     </section>
   );

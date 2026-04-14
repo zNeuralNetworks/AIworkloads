@@ -5,9 +5,14 @@ import { useLearning } from '../contexts/LearningContext';
 interface KnowledgeCheckCardProps {
   check: KnowledgeCheck;
   moduleId: string;
+  eyebrow?: string;
 }
 
-const KnowledgeCheckCard: React.FC<KnowledgeCheckCardProps> = ({ check, moduleId }) => {
+const KnowledgeCheckCard: React.FC<KnowledgeCheckCardProps> = ({
+  check,
+  moduleId,
+  eyebrow = 'Decision Check',
+}) => {
   const { completedChecks, completeCheck } = useLearning();
   const selectedOptionId = completedChecks[check.id];
   const selectedOption = check.options.find((option) => option.id === selectedOptionId);
@@ -16,7 +21,7 @@ const KnowledgeCheckCard: React.FC<KnowledgeCheckCardProps> = ({ check, moduleId
   return (
     <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
       <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-amber-400">
-        Check Your Understanding
+        {eyebrow}
       </div>
       <h3 className="mb-4 text-xl font-bold text-white">{check.prompt}</h3>
       <div className="grid gap-3">
@@ -48,7 +53,7 @@ const KnowledgeCheckCard: React.FC<KnowledgeCheckCardProps> = ({ check, moduleId
               : 'border-amber-500/20 bg-amber-500/10 text-amber-100'
           }`}
         >
-          <div className="mb-1 font-semibold">{isCorrect ? 'Correct mental model' : 'Refine the mental model'}</div>
+          <div className="mb-1 font-semibold">{isCorrect ? 'Correct' : 'Recheck'}</div>
           <p>{selectedOption.rationale}</p>
         </div>
       )}

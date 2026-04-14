@@ -72,15 +72,14 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
           Traffic Pattern Lab
         </div>
         <h3 className="mb-4 text-2xl font-bold text-white">
-          See what the workload is actually asking the network to do
+          Read the traffic pattern before the protocol name
         </h3>
         <p className="max-w-3xl text-slate-400">
-          Start with the traffic behavior, not the protocol name. These patterns are the reason the
-          fabric needs different load-balancing, congestion, and storage posture in the first place.
+          The active pattern explains which load-balancing, congestion, and storage posture matters first.
         </p>
       </div>
 
-      <div className="mb-10 grid gap-3 md:grid-cols-5">
+      <div className="mb-8 flex flex-wrap gap-2">
         {TRAFFIC_PATTERN_LAB.map((pattern) => {
           const isActive = pattern.id === activePattern.id;
           const cardAccent = accentFor(pattern);
@@ -93,25 +92,24 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
                 }
                 onPatternChange?.(pattern.id);
               }}
-              className={`rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/70 ${
+              aria-label={`${pattern.title}: ${pattern.summary}`}
+              className={`rounded-full border px-4 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/70 ${
                 isActive
                   ? `${cardAccent.border} ${cardAccent.bg}`
                   : 'border-white/5 bg-[#161b22] hover:border-white/15'
               }`}
             >
-              <div className={`mb-2 text-xs font-mono uppercase tracking-[0.18em] ${
-                isActive ? cardAccent.text : 'text-slate-500'
+              <span className={`text-xs font-mono uppercase tracking-[0.14em] ${
+                isActive ? cardAccent.text : 'text-slate-400'
               }`}>
-                Pattern
-              </div>
-              <h4 className="mb-2 text-base font-bold text-white">{pattern.title}</h4>
-              <p className="text-sm leading-relaxed text-slate-400">{pattern.summary}</p>
+                {pattern.title}
+              </span>
             </button>
           );
         })}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
         <div className="rounded-xl border border-white/5 bg-[#161b22] p-6 md:p-8">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
@@ -145,7 +143,7 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
           <div className="space-y-4">
             <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
               <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                Beginner Summary
+                Architecture Summary
               </div>
               <p className="text-sm leading-relaxed text-slate-300">{activePattern.summary}</p>
             </div>
@@ -159,7 +157,7 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
 
             <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5">
               <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                Where To Learn Next
+                Next Architecture Lens
               </div>
               <div className="flex flex-wrap gap-2">
                 {['Data Movement', 'Transport & Congestion', 'Communication Patterns'].map((item) => (
@@ -172,8 +170,7 @@ const TrafficPatternLab: React.FC<TrafficPatternLabProps> = ({ activePatternId: 
                 ))}
               </div>
               <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                Use this sequence after the lab: identify the traffic pattern, map how data moves,
-                confirm how congestion is controlled, then choose the communication and pathing posture.
+                Map data movement, verify congestion control, then choose communication and pathing posture.
               </p>
             </div>
           </div>

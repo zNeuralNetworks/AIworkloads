@@ -44,6 +44,15 @@ section[id] {
   padding-bottom: clamp(4.5rem, 7vw, 7.5rem);
 }
 
+.workload-module .post-hero-band {
+  padding-top: clamp(2.75rem, 4vw, 4.75rem);
+  padding-bottom: clamp(3rem, 4.5vw, 5rem);
+}
+
+.workload-module .post-hero-band.pt-0 {
+  padding-top: 0;
+}
+
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }

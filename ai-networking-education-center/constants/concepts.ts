@@ -146,13 +146,13 @@ export const DATA_MOVEMENT_STAGES: DataMovementStage[] = [
     iconKey: 'ArrowDownToLine',
     visualMode: 'ingest',
     notice:
-      'Notice how pressure forms before the training fabric is busy: the edge has to absorb dataset landing, queue it, and stage it in time for the first batch.',
+      'Pressure forms before collectives start: the edge must absorb, queue, and stage data for the first batch.',
     summary:
-      'Raw data, features, and model inputs land from external storage, object services, or upstream pipelines. This is where operators discover whether the cluster can absorb data without stalling the training window before collective traffic even begins.',
+      'External data lands through storage, object services, or upstream pipelines. The risk is first-batch delay before collective traffic begins.',
     dominantFlow: 'Mostly north-south, with burst fan-in at storage gateways and ingest nodes.',
     flowSteps: ['Source read', 'Ingress absorb', 'Stage for workers'],
     stressSignature:
-      'Short ingest windows, uneven queue growth, and storage uplink oversubscription that looks harmless until the first training epoch misses schedule.',
+      'Short ingest windows, uneven queues, and storage uplink pressure that delay first-batch readiness.',
     designPosture:
       'Separate ingest posture from steady-state training posture. Protect storage ingress, absorb bursts, and avoid assuming that a fabric sized for east-west collectives automatically handles dataset landing.',
     primarySignals:
@@ -166,13 +166,13 @@ export const DATA_MOVEMENT_STAGES: DataMovementStage[] = [
     iconKey: 'Shuffle',
     visualMode: 'shuffle',
     notice:
-      'Notice that data is no longer simply landing from storage: workers now redistribute shards laterally, so path balance and queue posture start determining startup behavior.',
+      'Workers redistribute shards laterally, so path balance and queue posture start controlling startup behavior.',
     summary:
-      'Data is normalized, staged, shuffled, and redistributed across workers. This is often the first point where traffic stops looking like conventional storage and starts behaving like a fabric problem.',
+      'Data is normalized, staged, shuffled, and redistributed across workers. Traffic starts behaving like a fabric problem.',
     dominantFlow: 'Mixed, but increasingly east-west as workers rebalance shards and stage batches.',
     flowSteps: ['Split work', 'Redistribute shards', 'Converge on balanced batches'],
     stressSignature:
-      'Incast, uneven path utilization, and latency spikes during job startup or repartitioning windows.',
+      'Incast, uneven path use, and latency spikes during startup or repartitioning windows.',
     designPosture:
       'Treat shuffle as a congestion rehearsal for the main workload. If path symmetry, queue policy, or ECN behavior are weak here, the collective phase will surface the same weaknesses harder.',
     primarySignals:
@@ -186,13 +186,13 @@ export const DATA_MOVEMENT_STAGES: DataMovementStage[] = [
     iconKey: 'Save',
     visualMode: 'checkpoint',
     notice:
-      'Notice how a durable save becomes both a storage event and a fabric event: many workers drain state at once and can collide with job-critical traffic.',
+      'A durable save becomes a fabric event when many workers drain state at once.',
     summary:
-      'Model state, optimizer state, and intermediate outputs must leave accelerator memory and land durably. This is the stage where storage-fabric coupling becomes operationally visible, because protecting progress can contend directly with job-critical traffic.',
+      'Model state and intermediate outputs leave accelerator memory and land durably. The risk is collision between progress protection and job-critical traffic.',
     dominantFlow: 'Strong east-west to storage aggregation, then north-south or backend east-west into storage tiers.',
     flowSteps: ['Drain state', 'Aggregate writes', 'Land durably'],
     stressSignature:
-      'Large periodic bursts, sustained write pressure, and interference between checkpoint windows and active collective traffic.',
+      'Periodic write bursts and interference between checkpoint windows and active collective traffic.',
     designPosture:
       'Design checkpoints as fabric events, not a storage footnote. Isolate hot paths, time burst behavior, and validate whether the storage fabric shares failure domains with the training fabric.',
     primarySignals:
@@ -206,13 +206,13 @@ export const DATA_MOVEMENT_STAGES: DataMovementStage[] = [
     iconKey: 'RotateCcw',
     visualMode: 'restore',
     notice:
-      'Notice how recovery stress reverses the checkpoint path: shared checkpoint targets must fan back out to many workers quickly and predictably under degraded conditions.',
+      'Recovery reverses checkpoint pressure: shared targets must fan out to many workers under degraded conditions.',
     summary:
-      'The recovery path determines whether the environment resumes quickly or turns every failure into a long rehydration event. This stage is operationally decisive because restart storms often happen under already degraded conditions.',
+      'The recovery path determines whether a failure resumes quickly or becomes a long rehydration event.',
     dominantFlow: 'Burst fan-out from checkpoint targets back into many workers at once.',
     flowSteps: ['Locate checkpoint', 'Fan out reads', 'Rehydrate workers'],
     stressSignature:
-      'Concurrent reads, control-plane urgency, and severe sensitivity to hot spots, storage locality, and queue imbalance during recovery.',
+      'Concurrent reads, hot targets, locality issues, and queue imbalance during recovery.',
     designPosture:
       'Optimize for deterministic restart time, not just raw peak throughput. Recovery is where weak storage placement, weak congestion posture, and hidden shared bottlenecks become obvious.',
     primarySignals:
@@ -226,25 +226,25 @@ export const DATA_MOVEMENT_DECISION_NOTES = [
     title: 'North-South Is Not the Main Event',
     iconKey: 'ArrowUpDown',
     guidance:
-      'Ingest matters, but the decisive architecture question is when data movement becomes east-west and starts competing with collective or restart traffic inside the fabric.',
+      'Ingest matters, but the decisive question is when data movement becomes east-west and competes with collective or restart traffic.',
   },
   {
     title: 'Storage Is Part of the Fabric',
     iconKey: 'HardDrive',
     guidance:
-      'Checkpoint and restore behavior should be reviewed with the same rigor as leaf-spine oversubscription or congestion policy, because storage bursts can dominate real job completion time.',
+      'Checkpoint and restore behavior deserve the same rigor as oversubscription or congestion policy.',
   },
   {
     title: 'Restart Time Is a Product Metric',
     iconKey: 'TimerReset',
     guidance:
-      'A fast steady state does not matter much if the cluster cannot recover predictably after failure, maintenance, or preemption windows.',
+      'A fast steady state is incomplete if the cluster cannot recover predictably.',
   },
   {
     title: 'Protocol Names Are Not Enough',
     iconKey: 'GitBranch',
     guidance:
-      'Saying RDMA, RoCEv2, or NVMe-oF is incomplete. The useful question is which lifecycle stage depends on them and what queueing or placement behavior they force you to get right.',
+      'RDMA, RoCEv2, and NVMe-oF matter only after you know which stage depends on them.',
   },
 ];
 

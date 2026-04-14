@@ -39,7 +39,6 @@ import DepthPreferenceTabs from './DepthPreferenceTabs';
 import KnowledgeCheckCard from './KnowledgeCheckCard';
 import RunbookLinksPanel from './RunbookLinksPanel';
 import TelemetryWatchPanel from './TelemetryWatchPanel';
-import ComparisonCards from './ComparisonCards';
 import QuickKnowledgeCheck from './QuickKnowledgeCheck';
 import LifecycleStageMap from './LifecycleStageMap';
 import { useLearning } from '../contexts/LearningContext';
@@ -92,21 +91,21 @@ const DATA_MOVEMENT_CHECK: KnowledgeCheck = {
   options: [
     {
       id: 'rdma-label',
-      label: 'The main issue is probably that the environment uses the wrong acronym, so start by swapping RDMA or RoCE settings globally.',
+      label: 'Change RDMA or RoCE settings globally.',
       rationale:
-        'Protocol labels alone are too coarse. The more useful first frame is which lifecycle stage is dominating pressure and what that implies for storage-fabric behavior.',
+        'Protocol labels are too coarse. First identify the lifecycle stage and storage-fabric behavior.',
     },
     {
       id: 'checkpoint-stage',
-      label: 'Checkpoint is acting as the dominant fabric event, so the real question is how writeback bursts and recovery posture interact with queueing and storage paths.',
+      label: 'Checkpoint is the dominant fabric event.',
       rationale:
-        'Correct. Checkpoint-heavy failures should be framed as stage-specific architecture and congestion behavior, not just generic transport troubleshooting.',
+        'Correct. Frame the failure around writeback bursts, recovery posture, queueing, and storage paths.',
     },
     {
       id: 'ignore-storage',
-      label: 'Storage is secondary to the network here, so the right move is to focus only on east-west training counters.',
+      label: 'Inspect only east-west training counters.',
       rationale:
-        'This misses the main lesson of the module: storage and restart paths are part of the fabric decision, not an isolated backend concern.',
+        'Storage and restart paths are part of the fabric decision, not an isolated backend concern.',
     },
   ],
 };
@@ -119,7 +118,7 @@ const DATA_MOVEMENT_MICRO_CHECK: KnowledgeCheck = {
     {
       id: 'stage-lens',
       label: 'The lifecycle stage that is late, bursty, or fragile',
-      rationale: 'Correct. Stage-first reasoning is more concrete and supports stronger mental models than acronym-first reasoning.',
+      rationale: 'Correct. Stage-first reasoning gives you a concrete event, signal, and next design question.',
     },
     {
       id: 'protocol-lens',
@@ -128,23 +127,6 @@ const DATA_MOVEMENT_MICRO_CHECK: KnowledgeCheck = {
     },
   ],
 };
-
-const DATA_MOVEMENT_LENS_COMPARISON = [
-  {
-    title: 'Protocol Lens',
-    subtitle: 'Too abstract too early',
-    summary: 'Starting with RDMA, RoCEv2, or NVMe-oF makes it easy to hold transport labels before understanding where the pressure lives.',
-    bullets: ['Good for expert refreshers', 'Weak for first-pass diagnosis'],
-    tone: 'amber' as const,
-  },
-  {
-    title: 'Stage Lens',
-    subtitle: 'Concrete and diagnosable',
-    summary: 'Starting with ingest, shuffle, checkpoint, or restore gives you a visible event, failure mode, and next question.',
-    bullets: ['Supports telemetry mapping', 'Transfers better into operations'],
-    tone: 'blue' as const,
-  },
-];
 
 const DATA_MOVEMENT_RUNBOOKS: RunbookReference[] = [
   {
@@ -189,25 +171,25 @@ const ENVIRONMENT_MODIFIER_GUIDANCE: Record<
 > = {
   'storage-coupled': {
     summary: 'Storage behavior is part of the fabric event, not a backend detail.',
-    whyItFits: 'Prioritize storage-path isolation, queue boundaries, and deterministic write or read behavior before debating transport branding.',
+    whyItFits: 'Prioritize storage-path isolation, queue boundaries, and deterministic write or read behavior.',
     plannerTrigger: 'Move to the planner when storage isolation, tier count, or path separation becomes a quantitative implementation question.',
     misconception: 'Do not say “the network is fine, storage is separate.” If the stage pressure is storage-coupled, that is already a fabric architecture decision.',
   },
   'synchronized-training': {
     summary: 'Collective timing pressure sits immediately downstream of this stage.',
-    whyItFits: 'Treat this stage as a rehearsal for the training fabric. Weak symmetry or weak early feedback here will reappear harder during collectives.',
+    whyItFits: 'Treat this stage as a rehearsal for the training fabric.',
     plannerTrigger: 'Move to the planner when rail count, plane count, or non-blocking assumptions are the remaining unknowns.',
     misconception: 'Do not isolate the stage from the collective phase. If training follows immediately, stage-local instability becomes job-time instability.',
   },
   'mixed-scientific': {
     summary: 'Multiple lifecycle modes share the same backend and compete for policy headroom.',
-    whyItFits: 'Bias toward explicit boundaries, predictable transitions, and telemetry that differentiates one workflow mode from another.',
+    whyItFits: 'Bias toward explicit boundaries, predictable transitions, and stage-specific telemetry.',
     plannerTrigger: 'Move to the planner when mixed-workflow segmentation or shared-tier capacity becomes the next design constraint.',
     misconception: 'Do not optimize for one clean benchmark path. Mixed scientific environments usually fail at transitions, not at the average case.',
   },
   'recovery-heavy': {
     summary: 'Restart quality matters nearly as much as steady-state job speed.',
-    whyItFits: 'Optimize for bounded recovery time, checkpoint locality, and queue behavior under degraded conditions rather than only peak throughput.',
+    whyItFits: 'Optimize for bounded recovery time, checkpoint locality, and degraded-state queue behavior.',
     plannerTrigger: 'Move to the planner when restart-domain sizing, storage fan-out, or failure-domain isolation becomes the real question.',
     misconception: 'Do not treat restart as a rare exception. In preemptible or failure-prone environments, recovery posture is core architecture.',
   },
@@ -299,7 +281,7 @@ const ConceptsSection: React.FC = () => {
         telemetry: telemetry.map((signal, index) => ({
           label: index === 0 ? 'Inspect first' : `Signal ${index + 1}`,
           signal,
-          whyItMatters: `This signal tells you whether ${stage.title.toLowerCase()} is the real pressure stage before you generalize to protocol or platform conclusions.`,
+          whyItMatters: `Confirms whether ${stage.title.toLowerCase()} is the real pressure stage.`,
         })),
         runbookLinks: STAGE_RUNBOOKS[stage.id] || DATA_MOVEMENT_RUNBOOKS,
         plannerTrigger: modifier.plannerTrigger,
@@ -343,52 +325,24 @@ const ConceptsSection: React.FC = () => {
           </div>
           <h2 className="mb-6 text-3xl font-bold text-white md:text-5xl">Data Movement</h2>
           <p className="max-w-4xl text-lg leading-relaxed text-slate-400">
-            The useful question is not whether the environment uses{' '}
+            Find the lifecycle stage creating pressure before debating{' '}
             <GlossaryTerm term="RDMA">RDMA</GlossaryTerm>,{' '}
             <GlossaryTerm term="RoCEv2">RoCEv2</GlossaryTerm>, or{' '}
-            <GlossaryTerm term="NVMe-oF">NVMe-oF</GlossaryTerm>. The useful question is where
-            the workflow is under pressure: ingest, shuffle, checkpoint, or restart. Those stages
-            determine whether the dominant constraint is storage, congestion, queue isolation, or
-            recovery time.
+            <GlossaryTerm term="NVMe-oF">NVMe-oF</GlossaryTerm>. Ingest, shuffle,
+            checkpoint, and restore drive different fabric decisions.
           </p>
         </div>
 
-        <div className="mb-10">
-          <DepthPreferenceTabs value={selectedDepthPreference} onChange={setDepthPreference} />
-        </div>
-
-        <div className="mb-12">
+        <div className="mb-8">
           {activeWorkloadProfile && (
-            <div className="mb-6 rounded-2xl border border-blue-500/15 bg-blue-500/10 p-4 text-sm text-blue-100">
-              This module is picking up the workload lens from the previous step. The active workload profile is shaping the default stage guidance so you do not have to restart the diagnosis from zero.
+            <div className="inline-flex rounded-full border border-blue-500/15 bg-blue-500/10 px-4 py-2 text-sm text-blue-100">
+              Active workload lens is setting the default stage context.
             </div>
           )}
         </div>
 
-        <div className="mb-12 grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-          <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
-            <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-blue-400">
-              Why This Matters
-            </div>
-            <h3 className="mb-4 text-2xl font-bold text-white">Most teams start in the wrong place</h3>
-            <p className="mb-5 text-sm leading-relaxed text-slate-300">
-              The mistake is treating data movement like a static protocol topic. In practice, the
-              useful question is which stage is controlling job time, recovery time, or operational
-              risk right now.
-            </p>
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-100">
-              <div className="mb-1 font-semibold">What users usually get wrong</div>
-              They say “we use RoCEv2” or “we need RDMA” and skip the harder question of whether
-              ingest, shuffle, checkpoint, or restore is the actual design problem.
-            </div>
-          </div>
-
-          <ComparisonCards
-            eyebrow="Lens Choice"
-            title="Teach the stage lens before the protocol lens"
-            intro="This is the main chunking move in the module: collapse many transport terms into a smaller and more usable lifecycle model."
-            items={DATA_MOVEMENT_LENS_COMPARISON}
-          />
+        <div className="mb-10">
+          <DepthPreferenceTabs value={selectedDepthPreference} onChange={setDepthPreference} />
         </div>
 
         <div className="mb-12">
@@ -403,19 +357,10 @@ const ConceptsSection: React.FC = () => {
           />
         </div>
 
-        <div className="mb-12">
-          <div className="mb-4 text-xs font-mono uppercase tracking-[0.28em] text-blue-500">
-            Lifecycle Stages
-          </div>
-          <h3 className="mb-8 text-2xl font-bold text-white">
-            Keep the lifecycle visible, then drive it with the stage that matters
-          </h3>
-        </div>
-
         <div className="mb-20">
           <DecisionSimulator
-            title="Choose the stage pressure, then see the infrastructure consequence"
-            intro="This simulator keeps the lifecycle model visible while you change the stage and environment context. Use it to diagnose which phase is really creating the network question before you reach for protocol labels."
+            title="Choose the stage, then inspect the infrastructure consequence"
+            intro="Change the stage and environment context before reaching for protocol labels."
             prompts={DATA_MOVEMENT_DECISION_PROMPTS}
             selectedValues={selectedSimulatorValues}
             onChange={handleSimulatorChange}
@@ -425,7 +370,7 @@ const ConceptsSection: React.FC = () => {
             renderVisual={(result) => (
               <div>
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-blue-400">Stage learning canvas</div>
+                  <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-blue-400">Stage Canvas</div>
                   <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-mono uppercase tracking-[0.18em] text-blue-300">
                     {activeStage.subtitle}
                   </div>
@@ -438,7 +383,7 @@ const ConceptsSection: React.FC = () => {
           >
             <div className="rounded-2xl border border-white/5 bg-[#111827] p-5">
               <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-                Which primitives matter
+                Primitive set
               </div>
               <div className="flex flex-wrap gap-2">
                 {activeStage.dependsOn.map((dependency) => (
@@ -451,7 +396,7 @@ const ConceptsSection: React.FC = () => {
                 ))}
               </div>
               <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                Use the stage to decide which transport or storage primitive matters. Do not start with the acronym and work backward.
+                Use the active stage to decide which transport or storage primitive matters.
               </p>
             </div>
           </DecisionSimulator>
@@ -459,127 +404,126 @@ const ConceptsSection: React.FC = () => {
 
         {(showExpertDepth || refreshersOpen) && (
           <div className="mb-20 overflow-hidden rounded-2xl border border-white/5 bg-[#161b22]">
-          <button
-            onClick={() => setRefreshersOpen((prev) => !prev)}
-            className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition-colors hover:bg-white/3"
-          >
-            <div>
-              <div className="mb-2 text-xs font-mono uppercase tracking-[0.28em] text-blue-500">
-                Foundational Refreshers
+            <button
+              onClick={() => setRefreshersOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition-colors hover:bg-white/3"
+            >
+              <div>
+                <div className="mb-2 text-xs font-mono uppercase tracking-[0.28em] text-blue-500">
+                  Protocol Reference
+                </div>
+                <h3 className="text-2xl font-bold text-white">Open protocol details only when needed</h3>
+                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+                  Open RDMA, RoCEv2, or NVMe details only when the active stage needs them.
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-white">Protocol intuition when you need it</h3>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
-                This material stays available, but secondary. Open it when you want the conceptual
-                ramp for RDMA, RoCEv2, or NVMe before returning to the lifecycle view.
-              </p>
-            </div>
-            <div className="shrink-0 text-slate-500">
-              {refreshersOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-            </div>
-          </button>
+              <div className="shrink-0 text-slate-500">
+                {refreshersOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              </div>
+            </button>
 
-          {refreshersOpen && (
-            <div className="space-y-4 border-t border-white/5 px-6 pb-6 pt-4">
-              <div className="grid gap-4 lg:grid-cols-3">
-                {supportingPrimitives.map((concept) => {
-                  const isExpanded = expandedRefreshers.has(concept.id);
-                  const Icon =
-                    ICON_MAP[concept.iconKey] ||
-                    FALLBACK_ICONS[concept.iconKey as keyof typeof FALLBACK_ICONS] ||
-                    Cpu;
+            {refreshersOpen && (
+              <div className="space-y-4 border-t border-white/5 px-6 pb-6 pt-4">
+                <div className="grid gap-4 lg:grid-cols-3">
+                  {supportingPrimitives.map((concept) => {
+                    const isExpanded = expandedRefreshers.has(concept.id);
+                    const Icon =
+                      ICON_MAP[concept.iconKey] ||
+                      FALLBACK_ICONS[concept.iconKey as keyof typeof FALLBACK_ICONS] ||
+                      Cpu;
 
-                  return (
-                    <article
-                      key={concept.id}
-                      className="overflow-hidden rounded-2xl border border-white/5 bg-[#0d1117]"
-                    >
-                      <button
-                        onClick={() => toggleRefresher(concept.id)}
-                        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-white/3"
+                    return (
+                      <article
+                        key={concept.id}
+                        className="overflow-hidden rounded-2xl border border-white/5 bg-[#0d1117]"
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="rounded-xl bg-blue-500/10 p-2.5 text-blue-400">
-                            <Icon size={18} />
+                        <button
+                          onClick={() => toggleRefresher(concept.id)}
+                          className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-white/3"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="rounded-xl bg-blue-500/10 p-2.5 text-blue-400">
+                              <Icon size={18} />
+                            </div>
+                            <div>
+                              <h4 className="text-lg font-bold text-white">{concept.title}</h4>
+                              <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-blue-500">
+                                {concept.fullName}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="text-lg font-bold text-white">{concept.title}</h4>
-                            <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-blue-500">
-                              {concept.fullName}
+                          <div className="shrink-0 text-slate-500">
+                            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                          </div>
+                        </button>
+
+                        {isExpanded && (
+                          <div className="space-y-4 border-t border-white/5 px-5 pb-5 pt-3">
+                            <p className="text-sm leading-relaxed text-slate-400">
+                              {claimText(concept.description)}
+                              {hasSourceMetadata(concept.description) && (
+                                <SourceBadge claim={concept.description} className="ml-2 align-middle" />
+                              )}
                             </p>
+
+                            {concept.id === 'rdma' && <RdmaRefresher />}
+                            {concept.id === 'roce_intro' && <RoceRefresher />}
+                            {concept.id === 'nvme' && <NvmeRefresher concept={concept} />}
+
+                            <ul className="space-y-3">
+                              {concept.features.map((feature, index) => (
+                                <li
+                                  key={`${concept.id}-${index}`}
+                                  className="flex items-start gap-3 text-slate-300"
+                                >
+                                  <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-blue-400" />
+                                  <span>
+                                    {claimText(feature)}
+                                    {hasSourceMetadata(feature) && (
+                                      <SourceBadge claim={feature} className="ml-2 align-middle" />
+                                    )}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
-                        </div>
-                        <div className="shrink-0 text-slate-500">
-                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </div>
-                      </button>
-
-                      {isExpanded && (
-                        <div className="space-y-4 border-t border-white/5 px-5 pb-5 pt-3">
-                          <p className="text-sm leading-relaxed text-slate-400">
-                            {claimText(concept.description)}
-                            {hasSourceMetadata(concept.description) && (
-                              <SourceBadge claim={concept.description} className="ml-2 align-middle" />
-                            )}
-                          </p>
-
-                          {concept.id === 'rdma' && <RdmaRefresher />}
-                          {concept.id === 'roce_intro' && <RoceRefresher />}
-                          {concept.id === 'nvme' && <NvmeRefresher concept={concept} />}
-
-                          <ul className="space-y-3">
-                            {concept.features.map((feature, index) => (
-                              <li
-                                key={`${concept.id}-${index}`}
-                                className="flex items-start gap-3 text-slate-300"
-                              >
-                                <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-blue-400" />
-                                <span>
-                                  {claimText(feature)}
-                                  {hasSourceMetadata(feature) && (
-                                    <SourceBadge claim={feature} className="ml-2 align-middle" />
-                                  )}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
           </div>
         )}
 
         {showDesignPanels && (
           <div className="mb-20">
-          <div className="mb-4 text-xs font-mono uppercase tracking-[0.28em] text-blue-500">
-            First Response
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {DATA_MOVEMENT_DECISION_NOTES.map((note) => {
-              const Icon =
-                ICON_MAP[note.iconKey] ||
-                FALLBACK_ICONS[note.iconKey as keyof typeof FALLBACK_ICONS] ||
-                Cpu;
+            <div className="mb-4 text-xs font-mono uppercase tracking-[0.28em] text-blue-500">
+              First Response
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {DATA_MOVEMENT_DECISION_NOTES.map((note) => {
+                const Icon =
+                  ICON_MAP[note.iconKey] ||
+                  FALLBACK_ICONS[note.iconKey as keyof typeof FALLBACK_ICONS] ||
+                  Cpu;
 
-              return (
-                <div key={note.title} className="rounded-2xl border border-white/5 bg-[#161b22] p-6">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
-                      <Icon size={18} />
+                return (
+                  <div key={note.title} className="rounded-2xl border border-white/5 bg-[#161b22] p-6">
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
+                        <Icon size={18} />
+                      </div>
+                      <h4 className="text-sm font-bold uppercase tracking-[0.16em] text-white">
+                        {note.title}
+                      </h4>
                     </div>
-                    <h4 className="text-sm font-bold uppercase tracking-[0.16em] text-white">
-                      {note.title}
-                    </h4>
+                    <p className="text-sm leading-relaxed text-slate-400">{note.guidance}</p>
                   </div>
-                  <p className="text-sm leading-relaxed text-slate-400">{note.guidance}</p>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -590,7 +534,7 @@ const ConceptsSection: React.FC = () => {
         <div className="mb-20">
           <TelemetryWatchPanel
             title="Stage validation telemetry"
-            intro="These watchpoints now follow the active simulator result so the stage diagnosis and telemetry posture stay connected."
+            intro="Watch the counters that prove the active stage is really the bottleneck."
             items={activeDataMovementResult.telemetry}
           />
         </div>
@@ -598,7 +542,7 @@ const ConceptsSection: React.FC = () => {
         <div className="mb-20">
           <RunbookLinksPanel
             title="If this becomes an incident, go here next"
-            intro="These runbooks now follow the active stage diagnosis instead of staying generic."
+            intro="Use the runbooks that match the active stage diagnosis."
             items={activeDataMovementResult.runbookLinks || DATA_MOVEMENT_RUNBOOKS}
           />
         </div>
@@ -610,30 +554,28 @@ const ConceptsSection: React.FC = () => {
         <div className="mb-20 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
             <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-cyan-300">
-              Explain It Back
+              Decision Closeout
             </div>
-            <h3 className="mb-3 text-2xl font-bold text-white">End-of-module synthesis</h3>
+            <h3 className="mb-3 text-2xl font-bold text-white">Frame the architecture decision</h3>
             <p className="mb-4 text-sm leading-relaxed text-slate-300">
-              If you had to explain this to a customer in two sentences, you would say:
+              Customer-ready framing:
             </p>
             <div className="rounded-xl border border-white/5 bg-[#0d1117] p-5 text-sm leading-relaxed text-slate-300">
-              “The important design question is not just which protocol is present. It is which
-              data-movement stage is dominating job time or recovery risk, and whether the fabric
-              can handle that stage without turning checkpoint, shuffle, or restart into the real bottleneck.”
+              "The design question is which data-movement stage is dominating job time or recovery risk, and whether the fabric can handle that stage without turning checkpoint, shuffle, or restart into the bottleneck."
             </div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-[#161b22] p-6">
             <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-emerald-300">
-              Transfer Prompt
+              Next Architecture Lens
             </div>
             <h3 className="mb-3 text-2xl font-bold text-white">Next decision</h3>
             <p className="mb-5 text-sm leading-relaxed text-slate-300">
-              Once the active stage is clear, move to the module that explains the resulting traffic geometry or congestion control question. That usually means <span className="font-semibold text-white">Communication Patterns</span> or <span className="font-semibold text-white">Transport & Congestion</span>, not a jump straight to platform selection.
+              Once the stage is clear, move to <span className="font-semibold text-white">Communication Patterns</span> or <span className="font-semibold text-white">Transport & Congestion</span>.
             </p>
             <button
               onClick={() => toggleMastered('concepts')}
-              className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+              className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 ${
                 isMastered
                   ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
                   : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
@@ -644,7 +586,10 @@ const ConceptsSection: React.FC = () => {
           </div>
         </div>
 
-        <SoWhatCallout body="If you only say RDMA, RoCEv2, or NVMe-oF, you have not made an architecture decision yet. The real decision is which data-movement stage dominates job time, which failure mode matters most, and whether the fabric can survive checkpoint and restart behavior without turning every incident into a long recovery event." />
+        <SoWhatCallout
+          title="Decision Rule"
+          body="Name the dominant data-movement stage, first failure mode, and telemetry proof before tuning transports or sizing platforms."
+        />
       </div>
     </section>
   );
@@ -938,7 +883,7 @@ const StageCanvas: React.FC<{
         </div>
         <div className="rounded-xl border border-white/5 bg-[#0d1117] p-4">
           <div className="mb-3 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-            Which primitives matter
+            Primitive set
           </div>
           <div className="flex flex-wrap gap-2">
             {dependencies.map((dependency) => (

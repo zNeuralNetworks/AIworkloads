@@ -6,6 +6,52 @@ Use this file as a running log — most recent entry at the top.
 
 ---
 
+## 2026-04-13 — Data Movement Copy/UI Tightening
+
+### Activity
+- [x] Reworked `components/ConceptsSection.tsx` around a stage-first decision rule for ingest, shuffle, checkpoint, and restore
+- [x] Replaced the workload carry-forward paragraph with a compact active-lens status chip
+- [x] Collapsed the opening "Why This Matters" and lens-choice material into a concise decision-rule band
+- [x] Tightened `components/LifecycleStageMap.tsx` so the lifecycle map behaves like a selector with active stage, dominant flow, first failure, and first signal
+- [x] Shortened Data Movement simulator, protocol refresher, telemetry, runbook, knowledge-check, and closeout copy
+- [x] Reduced Data Movement constants copy for stage summaries, notices, stress signatures, telemetry rationale, and decision notes
+- [x] Renamed remaining local learning-language labels toward architecture-reference framing
+- [x] Removed the post-hero "Why This Matters" / "Decision Lens" band from Data Movement
+
+### Verification
+- [x] `npm run lint` — clean
+- [x] `npm run test` — 23/23 passed
+- [x] `npm run build` — clean
+- [x] Playwright CLI desktop and mobile screenshots for `/#concepts`
+
+### Notes
+- Scope stayed on Data Movement and directly supporting UI labels; existing Workload Types changes were preserved.
+- The product boundary remains architecture/stage decision framing, with quantitative sizing left to AI Cluster Planner / Optics Master.
+
+---
+
+## 2026-04-13 — Workload Types Copy/UI Tightening
+
+### Activity
+- [x] Reviewed latest Workload Types screenshots across intro, checkpoint/simulator, traffic lab, transfer, and closing sections
+- [x] Re-read the Workload Types component and supporting simulator/traffic lab code paths
+- [x] Ran the app test suite to verify the current baseline before recommending changes
+- [x] `components/TrainingVsInferenceSection.tsx` — shortened Workload Types intro, checkpoint answers, anchor contrast copy, simulator copy, telemetry/runbook intros, closeout, and final decision rule
+- [x] `components/DecisionSimulator.tsx` — removed redundant guided-stage and selected-trait chip rows, tightened labels/disclosure summaries, reduced rounded dashboard chrome, and added clearer focus states on interactive controls
+- [x] `components/TrafficPatternLab.tsx` — replaced full paragraph pattern cards with compact pattern chips, widened the visual/interpretation layout, and renamed learning-language labels to architecture-reference language
+- [x] `components/KnowledgeCheckCard.tsx` — replaced "Check Your Understanding" / "Correct mental model" copy with more concise decision-check language
+- [x] `index.css` — added Workload Types-specific post-hero spacing override to reduce excessive vertical gaps without changing every module
+
+### Verification
+- [x] `npm run test` — 23/23 passed
+- [x] `npm run lint` — clean
+- [x] `npm run build` — clean
+
+### Notes
+- Primary adjustment: treat the 33% zoom screenshots as structural evidence, not exact spacing; the fix focuses on lower copy load and stronger decision guidance.
+
+---
+
 ## 2026-04-13 — "What to Tune" Content Pass
 
 ### Activity

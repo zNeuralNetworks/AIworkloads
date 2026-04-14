@@ -8,7 +8,7 @@ interface DepthPreferenceTabsProps {
 
 const DEPTH_OPTIONS: Array<{ id: LearningDepth; label: string; description: string }> = [
   { id: 'quick', label: 'Quick take', description: 'Plain-language orientation' },
-  { id: 'how', label: 'How it works', description: 'Core mental model' },
+  { id: 'how', label: 'How it works', description: 'Decision model' },
   { id: 'design', label: 'Design implication', description: 'Infrastructure posture' },
   { id: 'expert', label: 'Expert depth', description: 'Detailed reference mode' },
 ];
@@ -26,7 +26,7 @@ const DepthPreferenceTabs: React.FC<DepthPreferenceTabsProps> = ({ value, onChan
             <button
               key={option.id}
               onClick={() => onChange(option.id)}
-              className={`rounded-xl border px-4 py-3 text-left transition-all ${
+              className={`rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/70 ${
                 isActive
                   ? 'border-blue-500/30 bg-blue-500/10 shadow-[0_0_0_1px_rgba(59,130,246,0.12)]'
                   : 'border-white/5 bg-[#0d1117] hover:border-white/15'

@@ -18,7 +18,6 @@ interface DecisionSimulatorProps {
   resultSummaryTags?: Array<{ label: string; value: string; tone?: 'blue' | 'violet' | 'emerald' | 'amber' }>;
   reasonChange?: React.ReactNode;
   interactionMode?: 'default' | 'guided';
-  stageLabels?: string[];
   collapseSecondaryDetails?: boolean;
   children?: React.ReactNode;
 }
@@ -38,7 +37,6 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
   resultSummaryTags = [],
   reasonChange,
   interactionMode = 'default',
-  stageLabels = ['Choose traits', 'See the profile', 'Explore what breaks first'],
   collapseSecondaryDetails = false,
   children,
 }) => {
@@ -62,9 +60,9 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
   };
 
   return (
-    <div className="rounded-[28px] border border-white/5 bg-[#161b22] p-6 md:p-8">
-      <div className="mb-8">
-        <div className="mb-2 text-xs font-mono uppercase tracking-[0.24em] text-blue-400">{eyebrow}</div>
+    <div className="rounded-xl border border-white/5 bg-[#161b22] p-6 md:p-8">
+      <div className="mb-6">
+        <div className="mb-2 text-xs font-mono uppercase tracking-[0.16em] text-blue-400">{eyebrow}</div>
         <h3 className="mb-3 text-2xl font-bold text-white">{title}</h3>
         <p className="max-w-3xl text-sm leading-relaxed text-slate-400">{intro}</p>
       </div>
@@ -82,47 +80,16 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
                     {selectedPromptSummary.length}/{prompts.length} traits selected
                   </div>
                 </div>
-                <div className="mb-4 grid gap-2 sm:grid-cols-3">
-                  {stageLabels.map((label, index) => (
-                    <div
-                      key={label}
-                      className={`rounded-full border px-3 py-2 text-center text-[11px] font-mono uppercase tracking-[0.14em] ${
-                        index === 0
-                          ? 'border-violet-500/30 bg-violet-500/10 text-violet-200'
-                          : index === 1
-                            ? 'border-blue-500/20 bg-blue-500/10 text-blue-200'
-                            : 'border-amber-500/20 bg-amber-500/10 text-amber-200'
-                      }`}
-                    >
-                      {label}
-                    </div>
-                  ))}
-                </div>
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {selectedPromptSummary.map((item, index) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setActivePromptIndex(index)}
-                      className={`rounded-full border px-3 py-1.5 text-xs transition-all ${
-                        index === activePromptIndex
-                          ? 'border-blue-500/30 bg-blue-500/10 text-blue-200'
-                          : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20'
-                      }`}
-                    >
-                      {item.title}: {item.label}
-                    </button>
-                  ))}
-                </div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {prompts.map((prompt, index) => {
                     const isActiveStep = index === activePromptIndex;
+                    const selected = selectedPromptSummary.find((item) => item.id === prompt.id);
                     return (
                       <button
                         key={prompt.id}
                         type="button"
                         onClick={() => setActivePromptIndex(index)}
-                        className={`relative rounded-xl border px-3 py-3 text-left transition-colors ${
+                        className={`relative rounded-xl border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70 ${
                           isActiveStep
                             ? 'border-violet-500/30'
                             : 'border-white/5 bg-white/5 hover:border-white/15'
@@ -140,6 +107,9 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
                             Step {index + 1}
                           </div>
                           <div className="mt-1 text-sm font-semibold text-white">{prompt.title}</div>
+                          {selected ? (
+                            <div className="mt-1 text-xs text-slate-400">{selected.label}</div>
+                          ) : null}
                         </div>
                       </button>
                     );
@@ -161,10 +131,7 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
                         <motion.button
                           key={option.id}
                           onClick={() => handlePromptChange(guidedPrompt.id, option.id)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.97 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                          className={`rounded-2xl border p-4 text-left transition-colors ${
+                          className={`rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70 ${
                             isActive
                               ? 'border-violet-500/30 bg-violet-500/10 shadow-[0_0_0_1px_rgba(167,139,250,0.14)]'
                               : 'border-white/5 bg-white/5 hover:border-white/15 hover:bg-white/[0.07]'
@@ -195,12 +162,12 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
                         onClick={() => handlePromptChange(prompt.id, option.id)}
                         className={
                           prompt.layout === 'tiles'
-                            ? `rounded-2xl border p-4 text-left transition-all ${
+                            ? `rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/70 ${
                                 isActive
                                   ? 'border-blue-500/30 bg-blue-500/10 shadow-[0_0_0_1px_rgba(59,130,246,0.08)]'
                                   : 'border-white/5 bg-white/5 hover:border-white/15'
                               }`
-                            : `rounded-full border px-3.5 py-2 text-left transition-all ${
+                            : `rounded-full border px-3.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/70 ${
                                 isActive
                                   ? 'border-blue-500/30 bg-blue-500/10 text-blue-200'
                                   : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20'
@@ -224,7 +191,7 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
           {children}
         </div>
 
-        <div className="rounded-[24px] border border-white/5 bg-[#0b1020] p-6">
+        <div className="rounded-xl border border-white/5 bg-[#0b1020] p-6">
           <div className="mb-5 flex flex-wrap gap-2">
             {results.map((result) => {
               const isActive = result.id === activeResult.id;
@@ -232,8 +199,7 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
                 <motion.button
                   key={result.id}
                   onClick={() => onSelectResult?.(result.id)}
-                  whileTap={{ scale: 0.95 }}
-                  className={`relative rounded-full border px-3 py-1.5 text-xs font-mono uppercase tracking-[0.18em] transition-colors ${
+                  className={`relative rounded-full border px-3 py-1.5 text-xs font-mono uppercase tracking-[0.14em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/70 ${
                     isActive
                       ? 'border-blue-500/30 text-blue-300'
                       : 'border-white/10 bg-white/5 text-slate-500 hover:border-white/20 hover:text-slate-300'
@@ -261,7 +227,7 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="mb-5 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-5">
-              <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-blue-300">See the profile emerge</div>
+              <div className="mb-2 text-[11px] font-mono uppercase tracking-[0.18em] text-blue-300">Active profile</div>
               <h4 className="text-2xl font-bold text-white">{activeResult.recommendedPosture}</h4>
               <p className="mt-2 text-sm leading-relaxed text-slate-200">{activeResult.summary}</p>
               {resultSummaryTags.length > 0 && (
@@ -308,7 +274,7 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
             <CompactDisclosure
               eyebrow="Show reasoning"
               title="Open the full profile reasoning"
-              summary="Why it fits, tradeoffs, and telemetry are available here when you need the deeper explanation."
+              summary="Why it fits, tradeoffs, and telemetry."
               defaultOpen={!collapseSecondaryDetails}
             >
               <div className="grid gap-4 md:grid-cols-2">
@@ -327,7 +293,7 @@ const DecisionSimulator: React.FC<DecisionSimulatorProps> = ({
                 <CompactDisclosure
                   eyebrow="Next actions"
                   title="Open the operational and planning bridges"
-                  summary="Use this when you want runbooks, next teaching steps, or the best explanation for the current profile."
+                  summary="Runbooks, architecture checks, and planning boundary."
                   defaultOpen={!collapseSecondaryDetails}
                 >
                   <div className="grid gap-4 lg:grid-cols-2">
