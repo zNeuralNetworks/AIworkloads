@@ -20,16 +20,16 @@ const CongestionSequenceStrip: React.FC<CongestionSequenceStripProps> = ({
       <div className="mb-2 text-xs font-mono uppercase tracking-[0.22em] text-blue-400">
         Causal Sequence
       </div>
-      <h3 className="mb-3 text-2xl font-bold text-white">Teach congestion as a fixed causal order</h3>
+      <h3 className="mb-3 text-2xl font-bold text-white">Use a fixed diagnostic order</h3>
       <p className="mb-6 max-w-3xl text-sm leading-relaxed text-slate-400">
-        Use this strip to narrate the queue story in order: offered load rises, the switch marks
-        early, endpoints react, and only then does pause exist as an emergency guardrail.
+        Read the sequence in order: offered load rises, the switch marks early, endpoints react,
+        and pause stays an emergency guardrail.
       </p>
 
       <div className="grid gap-4 lg:grid-cols-4">
         <SequenceCard
           step="1"
-          title="Offered Load Rises"
+          title="Queue Growth"
           active={!ecnActive && !pfcActive}
           tone="blue"
           detail="Queue growth starts. The goal is not zero queue. The goal is bounded queue before rescue behavior dominates."
@@ -59,7 +59,7 @@ const CongestionSequenceStrip: React.FC<CongestionSequenceStripProps> = ({
 
       <div className="mt-5 rounded-xl border border-white/5 bg-[#0d1117] p-4">
         <div className="mb-1 text-[11px] font-mono uppercase tracking-[0.18em] text-slate-500">
-          Current teaching state
+          Current congestion state
         </div>
         <p className="text-sm leading-relaxed text-slate-300">
           Buffer occupancy is <span className="font-semibold text-white">{Math.round(bufferLevel)}%</span>.{' '}
@@ -99,7 +99,7 @@ const SequenceCard: React.FC<{
             : 'border-white/5 bg-[#0d1117] text-slate-300';
 
   return (
-    <div className={`rounded-2xl border p-5 transition-all ${toneClasses}`}>
+    <div className={`rounded-2xl border p-5 transition-colors ${toneClasses}`}>
       <div className="mb-3 flex items-center gap-3">
         <div className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-mono uppercase tracking-[0.18em]">
           Step {step}

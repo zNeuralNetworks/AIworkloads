@@ -6,6 +6,29 @@ Use this file as a running log — most recent entry at the top.
 
 ---
 
+## 2026-04-13 — Transport & Congestion Copy/UI Tightening
+
+### Activity
+- [x] Reorganized `components/ProtocolsSection.tsx` around a control-loop contract: workload pressure, ECN marking, CNP/DCQCN reaction, and PFC backstop
+- [x] Removed the top comparison/teaching stack and moved the simulator into the primary post-hero flow
+- [x] Added a compact control-plane map to separate QoS/traffic class, ECN, CNP/DCQCN, PFC, and pathing/transport strategy
+- [x] Reframed protocol tabs as a Transport & Pathing Reference and made path distribution distinct from transport posture
+- [x] Exposed the tuning order at all depths while keeping detailed procedure copy in expert depth
+- [x] Tightened UET, packet-spraying, PFC-scope, telemetry, runbook, and closeout copy
+- [x] Updated `components/CongestionSequenceStrip.tsx` to use architecture-reference language and removed transition-all in the edited control-loop surfaces
+- [x] Updated `constants/protocols.ts` to reduce conceptual overclaims and clarify platform/support boundaries
+
+### Verification
+- [x] `npm run lint` — clean
+- [x] `npm run test` — 23/23 passed
+- [x] `npm run build` — clean
+- [x] Playwright desktop and mobile screenshots for `/#protocols`
+
+### Notes
+- Scope stayed on Transport & Congestion and directly supporting protocol constants/components; existing Workload Types and Data Movement edits were preserved.
+
+---
+
 ## 2026-04-13 — Data Movement Copy/UI Tightening
 
 ### Activity
