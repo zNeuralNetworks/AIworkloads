@@ -1,8 +1,38 @@
 import path from 'path';
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
+
+/** Writes dist/version.json at build time so a deploy is verifiable with one request
+ *  (`curl -sk https://aiworkloads.lan/version.json`). `commit` prefers Coolify's
+ *  SOURCE_COMMIT env (the .git dir is not in the Docker build context); locally it
+ *  falls back to `git rev-parse`. `builtAt` always changes, so freshness is provable
+ *  even when the SHA is unavailable. Build-only. */
+function versionStamp() {
+  return {
+    name: 'version-stamp',
+    apply: 'build' as const,
+    closeBundle() {
+      let commit = process.env.SOURCE_COMMIT ?? '';
+      if (!commit) {
+        try {
+          commit = execFileSync('git', ['rev-parse', '--short=12', 'HEAD'], {
+            stdio: ['ignore', 'pipe', 'ignore'],
+          })
+            .toString()
+            .trim();
+        } catch {
+          commit = 'unknown';
+        }
+      }
+      const stamp = { commit: commit.slice(0, 12), builtAt: new Date().toISOString() };
+      writeFileSync(path.resolve(__dirname, 'dist/version.json'), `${JSON.stringify(stamp)}\n`);
+    },
+  };
+}
 
 export default defineConfig({
   server: {
@@ -37,6 +67,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
   },
   plugins: [
+    versionStamp(),
     react({
       // Enable fast refresh for dev mode
       fastRefresh: true,
